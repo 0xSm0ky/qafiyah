@@ -70,7 +70,7 @@ Departures not yet approved, found by a full scan on 2026-09-24 and ordered from
 
 - **What:** edge-gateway runs ModSecurity with OWASP CRS behind Cloudflare, and it has been in `DetectionOnly` since 2026-06-17.
 - **Where:** `docker-compose.yml` (`edge-gateway`, `MODSEC_RULE_ENGINE`), `apps/edge-gateway/`, `docs/deployment/services.md`, `.claude/skills/deploy/SKILL.md`
-- **Why it's unusual:** it is an extra nginx hop that blocks nothing. `services.md` records enforcement as validated safe on 2026-06-18, yet it stays off. Each image bump needs the vendor template re-copied and re-patched by hand. The documented WAF rollback puts a host port on `web`, which conflicts with `rollout()` scaling `web` to two replicas and moves web's peer outside the trusted subnet.
+- **Why it's unusual:** it is an extra nginx hop that blocks nothing. `services.md` records enforcement as validated safe on 2026-06-18, yet it stays off. Each image bump needs the vendor template re-copied and re-patched by hand. The documented WAF rollback puts a host port on `web`, which conflicts with `rollout()` scaling `web` to two replicas and moves web's peer outside the trusted subnet. Its real-IP setting reads `CF-Connecting-IP`, which the Cloudflare tunnel never sends, so it scores and logs every request as the Docker gateway address.
 - **Normal approach:** Cloudflare's managed WAF rules and rate limiting, which are already in the path, with one reverse proxy at the origin.
 - **Status:** Needs review
 

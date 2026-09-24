@@ -21,11 +21,13 @@ const INFINITE_SCROLL_THRESHOLD = 0.1;
 const SEARCH_RESULTS_STALE_TIME_MS = 5 * 60 * 1000;
 
 async function fetchSearch(input: SearchQueryInput): Promise<SearchResponse> {
-  const { data, error } = await apiBrowser.GET('/search', {
+  const { data, error, response } = await apiBrowser.GET('/search', {
     params: { query: searchQueryParams(input) },
   });
   if (data === undefined) {
-    throw error instanceof Error ? error : new Error('search request failed');
+    throw error instanceof Error
+      ? error
+      : new Error(`search request failed with HTTP ${response.status}`);
   }
   return data;
 }

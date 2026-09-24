@@ -34,7 +34,7 @@ Full config at `apps/web/nginx.conf`, baked into the image at `/etc/nginx/nginx.
 - Same-host (trailing-slash) redirects stay relative (`absolute_redirect off`) so the browser keeps https, never an `http://` Location or a leaked `:8080`.
 - Baseline security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`) live in `apps/web/nginx-security-headers.conf`, included at server scope and re-included in every `location` that sets its own headers (nginx drops inherited `add_header`).
 - The Content-Security-Policy is host-specific and split across `apps/web/nginx-csp.conf` (qafiyah.com and www) and `apps/web/nginx-csp-api.conf` (api.qafiyah.com, which alone allows cdn.jsdelivr.net in script-src for the Scalar docs UI).
-- Real visitor IP is restored from `CF-Connecting-IP`; the web nginx trusts that header only from the dedicated `edge` network (`172.28.0.0/24` in prod, `172.29.0.0/24` in dev), which carries only the edge-gateway. A peer on the default bridge cannot spoof it. On first deploy, confirm `docker compose logs web` shows real client IPs, not the `172.28.x`/`172.29.x` gateway.
+- Real visitor IP is restored from `X-Forwarded-For` (the Cloudflare tunnel does not send `CF-Connecting-IP`); the web nginx trusts that header only from the dedicated `edge` network (`172.28.0.0/24` in prod, `172.29.0.0/24` in dev), which carries only the edge-gateway, and takes the rightmost address it does not trust (`real_ip_recursive on`), so entries a client adds on the left are ignored. A peer on the default bridge cannot spoof it. After any change to the proxy chain, confirm `docker compose logs web` shows real client IPs, not the `172.28.x`/`172.29.x` gateway: every per-address limit (the web's `limit_req` and the API's anonymous and IP-ceiling buckets) keys on it.
 
 ## Telemetry proxy (`apps/telemetry-proxy`, Cloudflare Worker)
 
@@ -46,7 +46,7 @@ The edge gateway is the [OWASP ModSecurity CRS image](https://github.com/corerul
 
 - `BACKEND=http://web-edge:8080` (the web service's alias on the dedicated `edge` network), `PORT=8080`, `SERVER_NAME=qafiyah.com`.
 - `NGINX_ALWAYS_TLS_REDIRECT=off`: TLS terminates at Cloudflare; never self-redirect to https.
-- `REAL_IP_HEADER=CF-Connecting-IP` + `SET_REAL_IP_FROM=172.28.0.1` (dev: `172.29.0.1`): restores the real client IP for accurate CRS scoring/logging. The single address is the `edge` network gateway, which is how the host's `cloudflared` (through docker-proxy on the published `127.0.0.1:80`) appears to the container, so a client-supplied header is honored only from the tunnel, never from a lateral peer. `CF-Connecting-IP` then passes through validated, so the web nginx's own real-IP logic is unaffected.
+- `REAL_IP_HEADER=CF-Connecting-IP` + `SET_REAL_IP_FROM=172.28.0.1` (dev: `172.29.0.1`): is meant to restore the real client IP for CRS scoring and logging. The single address is the `edge` network gateway, which is how the host's `cloudflared` (through docker-proxy on the published `127.0.0.1:80`) appears to the container. The tunnel does not send `CF-Connecting-IP`, though, so today the WAF scores and logs every request as `172.28.0.1`; the web nginx does not depend on it, since it reads `X-Forwarded-For` itself.
 - `BLOCKING_PARANOIA=1` (paranoia level), `ANOMALY_INBOUND=5` (block threshold).
 
 ### Backend proxy override (`apps/edge-gateway/proxy_backend.conf.template`)
