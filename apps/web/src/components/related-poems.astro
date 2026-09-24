@@ -23,6 +23,7 @@ const { relatedPoems } = Astro.props;
             subtitle={item.poet.name}
             era={item.era?.name}
             href={poemUrl(item.slug)}
+            headingTag="h4"
           />
         ))
       ) : (

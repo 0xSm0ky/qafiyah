@@ -7,10 +7,18 @@ type ListCardProps = {
   readonly subtitle: string;
   readonly href: string;
   readonly era?: string | undefined;
+  readonly headingTag?: 'h2' | 'h4';
   readonly className?: string;
 };
 
-export function ListCard({ title, subtitle, href, era, className = '' }: ListCardProps) {
+export function ListCard({
+  title,
+  subtitle,
+  href,
+  era,
+  headingTag: Heading = 'h2',
+  className = '',
+}: ListCardProps) {
   return (
     <a
       href={href}
@@ -19,7 +27,7 @@ export function ListCard({ title, subtitle, href, era, className = '' }: ListCar
         className
       )}
     >
-      <h4 className="w-full min-w-0">
+      <Heading className="w-full min-w-0">
         <span
           className={cn(
             TYPE.heading,
@@ -28,7 +36,7 @@ export function ListCard({ title, subtitle, href, era, className = '' }: ListCar
         >
           {title.replaceAll('"', '')}
         </span>
-      </h4>
+      </Heading>
       <div className="flex w-full min-w-0 items-baseline justify-between gap-2">
         <p className={cn(TYPE.body, 'min-w-0 shrink truncate text-text-subtle duration-300')}>
           {subtitle}
