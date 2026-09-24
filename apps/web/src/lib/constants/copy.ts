@@ -21,7 +21,7 @@ export const SEARCH_TEXTS = {
   filterOnlyResultLabel: 'بهذه الفلاتر',
   noFilterResultsText: 'لم يُعثر على نتائج بهذه الفلاتر',
   arabicOnlyError: 'البحث بالعربية فقط',
-  poemsSearchPlaceholder: 'ابحث في مليون بيت',
+  poemsSearchPlaceholder: 'ابحث في أكثر من ٦ ملايين بيت',
   poetsSearchPlaceholder: 'ابحث عن ديوان شاعر',
   poemSingular: 'بيت',
   poetSingular: 'شاعر',
