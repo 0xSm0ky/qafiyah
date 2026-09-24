@@ -18,11 +18,11 @@ Each entry:
 
 Departures not yet approved, found by a full scan on 2026-09-24 and ordered from most to least concerning. These entries use **Why it's unusual** and **Status** in place of **Why** and **Date**. Once reviewed, a justified entry moves into its component section below with a **Why** and **Date**, and any other gets a plan to replace it.
 
-### The full quality gate runs only in local git hooks, through a custom runner
+### The quality gate is a custom runner, and its Docker phases run only locally
 
-- **What:** tests, clippy, `cargo test`, knip, depcruise, the custom checks, drift checks, and the smoke run exist only in `scripts/ci.ts` (a 334-line orchestrator with phases, a worker pool, and output scrubbing) and run from husky. GitHub Actions runs only lint, format, and types.
+- **What:** the gate is `scripts/ci.ts` (a 334-line orchestrator with phases, a worker pool, and output scrubbing). GitHub Actions runs it with `--no-docker` on every push and PR; the Docker phases (database-backed tests, dev and stack smoke) run only from the pre-push hook.
 - **Where:** `scripts/ci.ts`, `scripts/ci/phases.ts`, `.husky/pre-commit`, `.husky/pre-push`, `.github/workflows/ci.yml`, `docs/development.md`, `docs/topology.md`
-- **Why it's unusual:** Rust is never compiled on GitHub, so Dependabot PRs and outside contributors' PRs merge with no test signal, and `HUSKY=0` (documented) skips everything. The runner re-does turbo's parallelism and log prefixing, then filters turbo's banners with a hard-coded prefix list. The pre-commit hook runs the whole non-Docker gate on every commit and also deletes `.DS_Store` files across the tree, even though `.gitignore` covers them.
+- **Why it's unusual:** the runner re-does turbo's parallelism and log prefixing, then filters turbo's banners with a hard-coded prefix list. The database-backed tests and smoke runs never run on GitHub, so a PR can still merge without them, and `HUSKY=0` (documented) skips them locally. The pre-commit hook runs the whole non-Docker gate on every commit and also deletes `.DS_Store` files across the tree, even though `.gitignore` covers them.
 - **Normal approach:** the gate runs as GitHub Actions jobs with required status checks (static, TypeScript, Rust, Docker smoke). Root tasks become turbo tasks, and hooks stay fast (lint-staged on changed files).
 - **Status:** Needs review
 

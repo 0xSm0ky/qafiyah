@@ -112,7 +112,7 @@ Conventions: `docs/code-conventions.md`, `docs/typescript-conventions.md`,
 
 ## CI/CD topology
 
-- **Every push and PR to `main`** (`.github/workflows/ci.yml`): a fast subset only (`lint:check`, `format:check`, `types`). The full gate, `bun run ci`, runs locally before merging through the pre-commit and pre-push hooks. Pushes that touch only markdown, `docs/`, or `LICENSE` skip it. `.github/workflows/gitleaks.yml` scans every push and PR for committed secrets.
+- **Every push and PR to `main`** (`.github/workflows/ci.yml`): the gate without its Docker phases, `bun run ci --no-docker` (static checks, types and repo checks, TypeScript and Rust tests, clippy, and the contract snapshots). The Docker phases (database-backed tests and the dev and stack smoke) run only locally, through the pre-push hook. `.github/workflows/gitleaks.yml` scans every push and PR for committed secrets.
 - **Docker images are built on demand** (`.github/workflows/images.yml`, `workflow_dispatch`): one matrix job per service, build-only, nothing is pushed to a registry. Locally, `bun run build:images` builds the same images on their own; `bun run ci` builds them as part of the stack smoke.
 - **Merging to `main` does not deploy.** Production deploy is a separate, manual, ordered step (`bun run deploy`, runbook in `.claude/skills/deploy/SKILL.md`): it SSHes to the VPS, rebuilds images from source there, and rolls `api`/`web` with zero downtime. See `docs/deployment/README.md`.
 

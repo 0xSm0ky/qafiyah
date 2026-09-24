@@ -7,10 +7,6 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - "LICENSE"
   workflow_dispatch:
 
 permissions:
@@ -20,11 +16,17 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  ACTIONLINT_VERSION: 1.7.12
+  ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+  HADOLINT_VERSION: 2.15.1
+  HADOLINT_SHA256: c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507
+
 jobs:
-  checks:
-    name: Checks
+  gate:
+    name: Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -38,11 +40,21 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Lint
-        run: bun run lint:check
+      - name: Install actionlint and hadolint
+        run: |
+          curl -fsSLo actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          curl -fsSLo hadolint "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-linux-x86_64"
+          echo "${HADOLINT_SHA256}  hadolint" | sha256sum -c -
+          sudo install -m 0755 actionlint hadolint /usr/local/bin/
+          rm actionlint.tar.gz actionlint hadolint
 
-      - name: Format
-        run: bun run format:check
+      - name: Install the Rust toolchain
+        run: rustup toolchain install
 
-      - name: Types
-        run: bun run types
+      - name: Cache Rust builds
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Gate (everything but the Docker phases)
+        run: bun run ci --no-docker
