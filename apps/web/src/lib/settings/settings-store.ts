@@ -1,3 +1,4 @@
+import { browserStorage } from '@/lib/browser-storage';
 import { SITE_THEME_COLOR_DARK_HEX, SITE_THEME_COLOR_HEX } from '@/lib/constants/site-meta';
 
 import {
@@ -41,7 +42,10 @@ function wire(): void {
 
 export function getSettings(): Settings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
-  cache ??= readStoredSettings(window.localStorage);
+  if (cache === null) {
+    const storage = browserStorage();
+    cache = storage === undefined ? DEFAULT_SETTINGS : readStoredSettings(storage);
+  }
   return cache;
 }
 
@@ -60,7 +64,8 @@ export function subscribe(listener: () => void): () => void {
 export function updateSettings(patch: Partial<Settings>): void {
   const next = { ...getSettings(), ...patch };
   cache = next;
-  writeStoredSettings(window.localStorage, patch);
+  const storage = browserStorage();
+  if (storage !== undefined) writeStoredSettings(storage, patch);
   if (patch.theme !== undefined) applyTheme(patch.theme);
   notify();
   window.dispatchEvent(new CustomEvent<Settings>(SETTINGS_CHANGE_EVENT, { detail: next }));

@@ -98,4 +98,7 @@ describe('stateFromSnapshot', () => {
   it('maps an absent or unready viewer to loading', () => {
     expect(stateFromSnapshot(() => storage(), 'anything')).toEqual({ kind: 'loading' });
   });
+  it('maps storage the browser blocks to loading instead of throwing', () => {
+    expect(stateFromSnapshot(() => undefined, 'loading')).toEqual({ kind: 'loading' });
+  });
 });

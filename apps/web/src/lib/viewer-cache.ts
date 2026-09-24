@@ -45,12 +45,13 @@ export function initialOf(viewer: Viewer): string {
 }
 
 export function stateFromSnapshot(
-  getStorage: () => Pick<Storage, 'getItem'>,
+  getStorage: () => Pick<Storage, 'getItem'> | undefined,
   snapshot: string | null
 ): ViewerState {
   if (snapshot === null) return { kind: 'pending' };
   if (snapshot === 'anonymous') return { kind: 'anonymous' };
-  const viewer = readCachedViewer(getStorage());
+  const storage = getStorage();
+  const viewer = storage === undefined ? undefined : readCachedViewer(storage);
   if (viewer === undefined || !isReady(viewer)) return { kind: 'loading' };
   return { kind: 'signed-in', viewer };
 }

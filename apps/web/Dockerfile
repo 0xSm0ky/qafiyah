@@ -22,7 +22,7 @@ RUN --mount=type=secret,id=sentry_auth_token \
       exit 1; \
     fi; \
     if [ -n "$SENTRY_RELEASE" ]; then \
-      export SENTRY_AUTH_TOKEN SENTRY_RELEASE; \
+      export SENTRY_AUTH_TOKEN SENTRY_RELEASE PUBLIC_SENTRY_RELEASE="$SENTRY_RELEASE"; \
     fi; \
     bun run --filter @qafiyah/web build
 

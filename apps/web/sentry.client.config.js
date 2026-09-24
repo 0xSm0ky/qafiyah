@@ -17,7 +17,7 @@ function isLowSignalRejection(event) {
 
 Sentry.init({
   dsn: 'https://acbece4802d36f6e2904c8d673635c0d@t.qafiyah.com/4511594177560576',
-  enabled: !import.meta.env.DEV,
+  enabled: Boolean(import.meta.env.PUBLIC_SENTRY_RELEASE),
   environment: import.meta.env.DEV ? 'development' : 'production',
   tracesSampleRate: 0,
   dataCollection: {

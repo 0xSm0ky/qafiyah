@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { browserStorage } from '@/lib/browser-storage';
 import { VIEWER_HINT_COOKIE, VIEWER_STORAGE_KEY } from '@/lib/constants/config';
 import { cn } from '@/lib/utils';
 import {
@@ -85,7 +86,8 @@ function pickAvatar(viewer: Viewer): Pick<Viewer, 'avatarData' | 'avatarFailedAt
 
 async function resolveAvatar(payload: ViewerPayload): Promise<Viewer> {
   if (payload.avatarUrl === null) return { ...payload, avatarData: null, avatarFailedAt: null };
-  const previous = readCachedViewer(localStorage);
+  const storage = browserStorage();
+  const previous = storage === undefined ? undefined : readCachedViewer(storage);
   if (previous !== undefined && previous.avatarUrl === payload.avatarUrl) {
     if (previous.avatarData !== null) return { ...payload, ...pickAvatar(previous) };
     const failedAt = previous.avatarFailedAt;
@@ -133,7 +135,7 @@ export function AccountControl({ compact = false }: Props) {
     };
   }, []);
 
-  const state = fetched ?? stateFromSnapshot(() => localStorage, snapshot);
+  const state = fetched ?? stateFromSnapshot(browserStorage, snapshot);
   if (state.kind === 'anonymous') return null;
 
   return <span className={compact ? COMPACT_SLOT : SLOT}>{renderState(state, compact)}</span>;
