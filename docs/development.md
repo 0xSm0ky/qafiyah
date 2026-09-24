@@ -131,6 +131,8 @@ worktree's own API port, handled automatically).
 
 Commit messages follow `docs/pull-requests.md` (one subject line, nothing else). The pre-commit hook (`.husky/pre-commit`) runs `bun run ci --no-docker` (GitHub Actions runs only lint, format, and types, so this is the real gate), and the pre-push hook (`.husky/pre-push`) runs `bun run ci --docker-only` (the database-backed tests, the dev-origin smoke, and the built stack through the edge gateway). `HUSKY=0 git commit ...` or `HUSKY=0 git push ...` skips the hook when you have already run the gate.
 
+Both hooks first run `scripts/check/commit-identity.sh`, an optional guard against committing with the wrong email. It does nothing until you opt in, per clone, with `git config --local qafiyah.allowedEmail "$(git config --local user.email)"`; the address stays in `.git/config`, which is never committed. From then on a commit is refused unless its author and committer use that address, and a push is refused if any new commit's author, committer, or `*-by:` trailer (such as `Co-authored-by:`) uses another one. It reads the key with `git config --local`, so `git -c` overrides cannot satisfy it, but `--no-verify` or `HUSKY=0` skip it like any hook; GitHub's "Block command line pushes that expose my email" setting covers the addresses on your account on the server side.
+
 `AGENTS.md` is the per-directory guide; `CLAUDE.md` and `GEMINI.md` next to each one are committed symlinks to it, so every agent harness reads the same file. `bun run agents:link` recreates them after adding an `AGENTS.md`. On Windows, check out with `git config core.symlinks true` from a Developer Mode or admin shell, or the links appear as one-line text files.
 
 ## Troubleshooting

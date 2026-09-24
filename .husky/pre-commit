@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -e
 
+./scripts/check/commit-identity.sh pre-commit
+
 find . -type d \( -name node_modules -o -name .git \) -prune -o -type f -name '.DS_Store' -print -delete
 git rm --cached --quiet --ignore-unmatch '*.DS_Store' '**/.DS_Store' >/dev/null 2>&1 || true
 

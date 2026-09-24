@@ -17,5 +17,15 @@ security vulnerabilities, see [SECURITY.md](SECURITY.md) instead.
 5. Follow [`pull-requests.md`](../docs/pull-requests.md) for commit message and PR conventions.
 6. `README.md`'s "Documentation map" lists where everything is documented; update the doc that describes what you changed.
 
+## Keeping your email private
+
+Every commit carries an author email, and pushing publishes it. To make sure this clone only ever commits with the address you meant, for example a GitHub no-reply address rather than a personal or work one:
+
+1. Set that address for this clone only: `git config --local user.email <address>`.
+2. Turn on the guard: `git config --local qafiyah.allowedEmail "$(git config --local user.email)"`. The git hooks then refuse any commit, and any push, whose author, committer, or `Co-authored-by:` line uses a different address, including one an AI agent or a script sets. The address stays in `.git/config` and is never committed.
+3. On GitHub, under Settings, then Emails, turn on "Keep my email addresses private" and "Block command line pushes that expose my email", so GitHub also rejects them on push.
+
+Details and limits: [`docs/development.md`](../docs/development.md) ("Committing").
+
 By contributing, you agree that your contributions will be licensed under the project's
 [MIT license](../LICENSE).

@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
+./scripts/check/commit-identity.sh pre-push
+
 echo "Running the Docker phases (db, origin, stack)..."
 bun run ci --docker-only
