@@ -1,4 +1,5 @@
 import { resolveProxyPath } from '@/lib/api/proxy-allowlist';
+import { CACHE_SEARCH } from '@/lib/server/cache';
 import { INTERNAL_API_KEY, INTERNAL_API_URL } from '@/lib/server/env';
 import { API_KEY_HEADER, API_V1_PREFIX } from '@qafiyah/config';
 
@@ -34,6 +35,9 @@ export async function proxyRequest({ params, request, url }: ProxyContext): Prom
   for (const name of FORWARDED_RESPONSE_HEADERS) {
     const value = upstream.headers.get(name);
     if (value !== null) out.set(name, value);
+  }
+  if (path === 'search' && (upstream.ok || upstream.status === 304)) {
+    out.set('cache-control', CACHE_SEARCH);
   }
   if (upstream.status === 304) return new Response(null, { status: 304, headers: out });
   return new Response(upstream.body, { status: upstream.status, headers: out });

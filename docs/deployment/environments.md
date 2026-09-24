@@ -34,6 +34,9 @@ headers. That is why JSON reads are `Cache-Control: private, max-age=300`: the
 caller's own browser may reuse a response for five minutes, but no shared cache
 (Cloudflare, nginx) may store one, since it would hand one caller's counters to
 the next and let cached hits skip the count.
+The website's `/api/v1/search` proxy drops those headers, so every visitor gets
+the same response; it sets its own `public` policy on successful searches, and
+the website's nginx caches them for five minutes.
 
 Anonymous callers share a per-IP hourly bucket. Keyed callers get their own
 bucket and their own number. Exceeding either returns `429` as

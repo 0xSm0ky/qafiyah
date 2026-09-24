@@ -1,6 +1,7 @@
 import { err, ok } from 'neverthrow';
 
 import { expectJsonObject } from '../checks/body';
+import { headerIncludes } from '../checks/headers';
 import { isNoStore, isStatus } from '../checks/status';
 import { WEB } from '../target';
 
@@ -17,16 +18,16 @@ const isPoemSlug: Check = {
 export const proxyProbes: readonly Probe[] = [
   {
     url: `${WEB}/api/v1/search?q=%D8%AD%D8%A8`,
-    note: 'proxy search passthrough',
+    note: 'proxy search passthrough, publicly cacheable',
     expect: 'ok',
-    checks: [expectJsonObject],
+    checks: [expectJsonObject, headerIncludes('Cache-Control', 'public')],
     surfaces: ALL,
   },
   {
     url: `${WEB}/api/v1/poems/random`,
-    note: 'proxy random poem passthrough',
+    note: 'proxy random poem passthrough, never cached',
     expect: 'ok',
-    checks: [isPoemSlug],
+    checks: [isPoemSlug, isNoStore],
     surfaces: ALL,
   },
   {
