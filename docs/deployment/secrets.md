@@ -36,10 +36,16 @@ for the laptop key's backup in the password manager.
 
 Do these in order, and do not run `bun run deploy` until step 6.
 
-1. **On the VPS**, install `sops` and `age` (release binaries) and generate the
-   VPS key:
+1. **On the VPS**, install `age` from apt and `sops` from its checksum-verified
+   release binary, then generate the VPS key:
 
    ```bash
+   apt-get install -y age
+   v=3.13.3
+   curl -fsSLO "https://github.com/getsops/sops/releases/download/v${v}/sops-v${v}.linux.amd64"
+   curl -fsSLO "https://github.com/getsops/sops/releases/download/v${v}/sops-v${v}.checksums.txt"
+   grep " sops-v${v}.linux.amd64$" "sops-v${v}.checksums.txt" | sha256sum -c -
+   install -m 0755 "sops-v${v}.linux.amd64" /usr/local/bin/sops
    mkdir -p ~/.config/sops/age && (umask 077 && age-keygen -o ~/.config/sops/age/keys.txt)
    ```
 
