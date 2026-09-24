@@ -48,7 +48,7 @@ COPY apps/web/nginx-csp-api.conf /etc/nginx/nginx-csp-api.conf
 COPY apps/web/nginx-bad-bots.conf /etc/nginx/nginx-bad-bots.conf
 COPY apps/web/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh \
-    && mkdir -p /var/cache/nginx/astro /var/cache/nginx/api \
+    && mkdir -p /var/cache/nginx/astro \
     && chown -R nginx:nginx /var/cache/nginx
 ENV NODE_ENV=production HOST=127.0.0.1 SSR_PORT=4321
 EXPOSE 8080

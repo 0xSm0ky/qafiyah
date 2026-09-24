@@ -19,10 +19,8 @@ const PROBE_PATH = `${API_V1_PREFIX}/meters`;
 const LIMIT_HEADER = 'x-ratelimit-limit';
 const REMAINING_HEADER = 'x-ratelimit-remaining';
 const RESET_HEADER = 'x-ratelimit-reset';
-const CACHE_HEADER = 'x-cache-status';
 
 const API_HOST = new URL(PROD_API_URL).host;
-const RUN_ID = Date.now().toString(36);
 
 type Args = {
   readonly key: string | undefined;
@@ -36,7 +34,6 @@ type Probe = {
   readonly remaining: number | undefined;
   readonly reset: number | undefined;
   readonly retryAfter: number | undefined;
-  readonly cached: boolean;
 };
 
 const dim = (s: string) => `\u001B[2m${s}\u001B[0m`;
@@ -75,11 +72,8 @@ function targetsLoopback(): boolean {
   return hostname === 'localhost' || hostname === '127.0.0.1';
 }
 
-let probesSent = 0;
-
 function probeUrl(): string {
-  probesSent += 1;
-  return `${BASE_URL}${PROBE_PATH}?quota=${RUN_ID}-${probesSent}`;
+  return `${BASE_URL}${PROBE_PATH}`;
 }
 
 function parseArgs(argv: readonly string[]): Args {
@@ -110,7 +104,6 @@ async function hit(key: string | undefined): Promise<Probe> {
     remaining: numberHeader(response, REMAINING_HEADER),
     reset: numberHeader(response, RESET_HEADER),
     retryAfter: numberHeader(response, 'retry-after'),
-    cached: (response.headers.get(CACHE_HEADER) ?? '').toUpperCase() === 'HIT',
   };
 }
 
@@ -125,8 +118,7 @@ function line(index: number, total: number, probe: Probe): string {
   const which = probe.status === 429 ? ` ${isBurst(probe) ? 'burst' : 'hourly'}` : '';
   const retry =
     probe.retryAfter === undefined ? '' : yellow(`  retry-after ${probe.retryAfter}s${which}`);
-  const cached = probe.cached ? red('  CACHED') : '';
-  return `  ${n}  ${status}  remaining ${remaining}${retry}${cached}`;
+  return `  ${n}  ${status}  remaining ${remaining}${retry}`;
 }
 
 async function drainHit(key: string | undefined): Promise<Probe> {
@@ -195,13 +187,11 @@ async function main(): Promise<void> {
   console.log(line(1, planned + 1, first));
   let sawHourly = first.status === 429 && !isBurst(first);
   let sawBurst = first.status === 429 && isBurst(first);
-  let sawCached = first.cached;
 
   for (let i = 0; i < planned; i += 1) {
     if (drain) await sleep(DRAIN_INTERVAL_MS);
     const probe = drain ? await drainHit(key) : await hit(key);
     console.log(line(i + 2, planned + 1, probe));
-    if (probe.cached) sawCached = true;
     if (probe.status === 429) {
       if (isBurst(probe)) sawBurst = true;
       else sawHourly = true;
@@ -209,11 +199,6 @@ async function main(): Promise<void> {
   }
 
   console.log('');
-  if (sawCached) {
-    console.log(
-      red('  some responses came from the edge cache, so those never reached the limiter.\n')
-    );
-  }
   if (sawHourly) {
     console.log(green('  the hourly quota is enforced: a 429 was returned.\n'));
   } else if (sawBurst) {

@@ -60,10 +60,10 @@ Departures not yet approved, found by a full scan on 2026-09-24 and ordered from
 
 ### The web container runs two processes and is also the API's public ingress
 
-- **What:** the web image runs nginx and Bun side by side under a shell loop that polls every 5 seconds. That nginx also carries the `api.qafiyah.com` server block (routing, the `/account` 404, the API response cache, and the API CSP).
+- **What:** the web image runs nginx and Bun side by side under a shell loop that polls every 5 seconds. That nginx also carries the `api.qafiyah.com` server block (routing, the `/account` 404, and the API CSP).
 - **Where:** `apps/web/Dockerfile`, `apps/web/docker-entrypoint.sh`, `apps/web/nginx.conf`, `apps/web/nginx-csp-api.conf`, `docker-compose.yml` (`web` networks and `depends_on`), `docs/deployment/architecture.md`, `docs/topology.md`
 - **Why it's unusual:** requests pass through Cloudflare, the edge-gateway nginx, the web nginx, then Bun or the API. Changing the API's edge behavior means rebuilding the web image, and a crash of the Astro process takes `api.qafiyah.com` down too. The `while kill -0 ...; sleep 5` loop is a homemade supervisor. `web` also joins the `default` network and waits on `db`, although it never talks to Postgres and `docs/topology.md` says `default` carries only `api`, `db`, `es`, and the indexer.
-- **Normal approach:** one process per container. Route each hostname to its own service at the existing edge-gateway (or with cloudflared ingress rules), keep the API's cache config with the API, and put `web` only on `edge` and `backend`.
+- **Normal approach:** one process per container. Route each hostname to its own service at the existing edge-gateway (or with cloudflared ingress rules), and put `web` only on `edge` and `backend`.
 - **Status:** Needs review
 
 ### A self-hosted WAF that has only ever logged
@@ -610,7 +610,7 @@ The API is not just a thin DB connector, and the crate carries no doc comments: 
 
 - **What:** denied at the edge, guarded by `API_KEY_INTERNAL` alone, and merged outside both the `cached` and `limited` routers, with `no-store` on every response.
 - **Where:** `apps/web/nginx.conf` (404 for `^~ /account` on `api.qafiyah.com`), `apps/api/src/routes/account.rs::guard`, `apps/api/src/auth.rs::Keys::is_internal`
-- **Why:** `guard` accepts only what `Keys::is_internal` matches, so neither a user's own API key nor `API_KEY_FULL` opens it, even though both bypass the limiter on `/v1`. Staying outside `cached` means `cache::layer` never stamps `public, max-age=300` on a session payload. Any one of the three would usually be enough; the point is that a mistake in one is survivable, because an nginx cache hit is served without ever reaching the origin.
+- **Why:** `guard` accepts only what `Keys::is_internal` matches, so neither a user's own API key nor `API_KEY_FULL` opens it, even though both bypass the limiter on `/v1`. Staying outside `cached` means `cache::layer` never stamps `public, max-age=300` on a session payload. Any one of the three would usually be enough; the point is that a mistake in one is survivable, because a shared-cache hit is served without ever reaching the origin.
 - **Normal approach:** a single auth middleware on the routes.
 - **Date:** 2026-09-21
 
@@ -701,8 +701,8 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 ### Form POSTs rely on Astro's origin check instead of a CSRF token
 
 - **What:** no CSRF token; Astro rejects a POST without a matching `Origin` header with `403 Cross-site POST form submissions are forbidden` before the route runs, on top of the `SameSite=Lax` session cookie.
-- **Where:** `pages/account/`, `pages/auth/`
-- **Why:** the framework check plus `SameSite=Lax` already covers cross-site forms. Testing these routes with curl requires an explicit `-H 'Origin: ...'`.
+- **Where:** `pages/account/`, `pages/auth/`, `apps/web/astro.config.mjs` (`security.allowedDomains`)
+- **Why:** the framework check plus `SameSite=Lax` already covers cross-site forms. The check compares `Origin` with the request URL, and TLS ends before nginx, so Astro only sees `https://qafiyah.com` because `security.allowedDomains` lets it trust nginx's `X-Forwarded-Proto: https`; without that every production POST is a 403. Testing these routes with curl requires an explicit `-H 'Origin: ...'`.
 - **Normal approach:** a per-form CSRF token.
 - **Date:** 2026-09-21
 
