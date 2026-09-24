@@ -1,0 +1,8 @@
+# Qafiyah security policy
+# Format: RFC 9116 (https://www.rfc-editor.org/rfc/rfc9116)
+
+Contact: mailto:{EMAIL}
+Expires: 9999-06-13T00:00:00.000Z
+Preferred-Languages: en
+Canonical: {SITE}/.well-known/security.txt
+Canonical: {API}/.well-known/security.txt

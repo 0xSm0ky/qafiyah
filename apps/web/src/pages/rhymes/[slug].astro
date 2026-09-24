@@ -1,0 +1,18 @@
+---
+import ListPageBody from '@/components/list-page-body.astro';
+import Layout from '@/layouts/layout.astro';
+import { parsePageQuery } from '@/lib/pagination';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { buildTaxonomyTermView, loadTaxonomyTerm } from '@/lib/seo/taxonomy-pages';
+
+const page = parsePageQuery(Astro.url.searchParams.get('page'));
+const { slug } = Astro.params;
+const load = page === null || !slug ? null : await loadTaxonomyTerm('rhymes', slug, page);
+if (!load) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+const { layout, body } = buildTaxonomyTermView('rhymes', load);
+---
+
+<Layout {...layout}>
+  <ListPageBody {...body} />
+</Layout>

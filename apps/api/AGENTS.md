@@ -1,0 +1,24 @@
+# API Agent Guide
+
+Read-only Rust/axum service over Postgres + Elasticsearch for the qafiyah.com Arabic poetry catalog. Versioned under `/v1`, contract-first via `utoipa` (the committed `generated/openapi/openapi.json` fails CI if the code drifts from it, `openapi.rs`).
+
+## Shape
+
+- `domain/`: query building + row→DTO mapping per resource (poems, poets, taxonomy, search). Real logic lives here; `routes/` handlers stay thin.
+- `routes/`: one file per resource, wired into the OpenAPI contract in `lib.rs::app`.
+- `es/`: Elasticsearch query bodies for full-text search, including weighted relevance-ranking tiers (`es/query.rs`).
+- `accounts/`: the separate `qafiyah_accounts` database (key generation and hashing, the cached lookup, the usage flush). Its schema lives in `apps/api/migrations/`, the repo's only `sqlx` migrations; the corpus database is still managed by `data/db/` dumps and has no migrations.
+- `cors`, `log`, `error` wrap every route; `rate_limit` wraps the whole `/v1` nest. `cache` additionally wraps only the OpenAPI-contract routes (`routes::poems::random` and the `go` redirect routes are merged in outside the cache layer on purpose, see `lib.rs::app`).
+- `generated/`: nothing here is hand-authored (see `docs/code-conventions.md`'s "Generated files" rule): `openapi/openapi.json` is the `document()` output checked against by `openapi.rs`'s drift test (regenerate with `bun run openapi:snapshot`); `es/query.vectors.json` is the ES query-builder output checked by `es-query-dump.rs`'s drift test (regenerate with `bun run es:query:snapshot`). Both are compile-time `include_str!`'d only from `#[cfg(test)]` code, so moving or missing them never affects a release build, only `cargo test`.
+
+## Deliberate, non-obvious behavior
+
+See the API section of `docs/exceptions.md` before assuming something is incidental.
+
+## Tests
+
+Three tiers, cheapest first. Unit and seeded property tests sit inline next to the code they cover. `http_tests/` drives the assembled `app()` in process with `tower::ServiceExt::oneshot`, using `test_support.rs` for lazy database pools that fail on first use, a `FakeEs` listener that records every body it receives, request helpers, and a deterministic `Rng`; a 500 from one of those routes therefore proves the request reached the database, and a 400 proves it did not. `tests/db.rs` runs every contract operation and the accounts flows against whatever dump is loaded, and returns early unless all three `QAFIYAH_TEST_*` variables are set, so plain `cargo test` needs no infrastructure; `bun run rust:test:db` sets them from the dev stack. Each accounts test runs inside `Harness::isolated`, which deletes its user even when the test panics.
+
+## Everything else
+
+Key comparison, CORS, error shapes (RFC 9457 problem+json), caching (ETag/Cache-Control), OpenAPI generation beyond the contract-drift check: ordinary axum/utoipa plumbing, one file each, no surprises.

@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-debug-screens";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@utility optical-center {
+  position: relative;
+  top: 0.3em;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    @apply ring-1 ring-text outline-none;
+  }
+}
+
+@theme inline {
+  --breakpoint-*: initial;
+  --breakpoint-xxs: 20rem;
+  --breakpoint-xs: 30rem;
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+  --breakpoint-3xl: 112rem;
+  --breakpoint-4xl: 128rem;
+  --text-xxs: 0.75rem;
+  --text-xxs--line-height: 1.125rem;
+  --text-display: var(--display-size);
+  --text-display--line-height: var(--display-leading);
+  --text-title: var(--title-size);
+  --text-title--line-height: var(--title-leading);
+  --text-heading: var(--heading-size);
+  --text-heading--line-height: var(--heading-leading);
+  --text-interface-heading: 1.5rem;
+  --text-interface-heading--line-height: 2.5rem;
+  --text-subheading: 1.25rem;
+  --text-subheading--line-height: 2rem;
+  --text-verse: var(--verse-size);
+  --text-verse--line-height: 1.8;
+  --text-poem-title: var(--poem-title-size);
+  --text-poem-title--line-height: 1.4;
+  --text-poem-byline: var(--poem-byline-size);
+  --text-poem-byline--line-height: 1.6;
+  --text-poem-meta: var(--poem-meta-size);
+  --text-poem-meta--line-height: 1.6;
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.875rem;
+  --text-caption: 1rem;
+  --text-caption--line-height: 1.625rem;
+  --text-micro: 0.875rem;
+  --text-micro--line-height: 1.375rem;
+
+  --font-sans: var(--font-amiri);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: color-mix(in oklab, var(--border) 50%, transparent);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-accent: var(--accent);
+  --color-highlight: var(--highlight);
+  --color-danger: var(--danger);
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-Regular-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-Bold-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amiri Fallback";
+  src:
+    local("Geeza Pro"), local("Noto Naskh Arabic"), local("Noto Serif"), local("Times New Roman");
+  font-weight: 400 700;
+  font-style: normal;
+  ascent-override: 112.4%;
+  descent-override: 63.4%;
+  line-gap-override: 0%;
+}
+
+@layer base {
+  :root {
+    --font-amiri: "Amiri", "Amiri Fallback", serif;
+    --gutter: 1rem;
+    --poem-gutter: 0rem;
+    --verse-size: 1.25rem;
+    --poem-title-size: 1.625rem;
+    --poem-byline-size: 1.125rem;
+    --poem-meta-size: 0.875rem;
+
+    --surface: #f8f6f3;
+    --surface-raised: #ffffff;
+    --surface-sunken: #f0edeb;
+    --surface-hover: #e7e5e2;
+    --border: #cecbc9;
+    --text: #252422;
+    --text-muted: #4b4846;
+    --text-subtle: #676562;
+    --accent: #42403d;
+    --highlight: #22776b;
+    --danger: #c51f1f;
+
+    --display-size: 2.125rem;
+    --display-leading: 3rem;
+    --title-size: 1.5rem;
+    --title-leading: 2.25rem;
+    --heading-size: 1.25rem;
+    --heading-leading: 2rem;
+  }
+
+  .dark {
+    --surface: #0c0b09;
+    --surface-raised: #12100f;
+    --surface-sunken: #181614;
+    --surface-hover: #1e1c1a;
+    --border: #2a2827;
+    --text: #dedbd9;
+    --text-muted: #aba8a6;
+    --text-subtle: #888583;
+    --accent: #b7b5b2;
+    --highlight: #64c4b7;
+    --danger: #ed4c42;
+  }
+
+  @media (width >= theme(--breakpoint-xs)) {
+    :root {
+      --poem-gutter: 2rem;
+      --verse-size: 1.5rem;
+      --poem-title-size: 1.875rem;
+      --poem-byline-size: 1.25rem;
+      --poem-meta-size: 0.9375rem;
+    }
+  }
+
+  @media (width >= theme(--breakpoint-sm)) {
+    :root {
+      --gutter: 3rem;
+      --poem-gutter: 3rem;
+      --verse-size: 1.625rem;
+      --poem-title-size: 2.125rem;
+      --poem-byline-size: 1.3125rem;
+      --poem-meta-size: 1rem;
+    }
+  }
+
+  @media (width >= theme(--breakpoint-md)) {
+    :root {
+      --gutter: 5.5rem;
+      --poem-gutter: 4rem;
+      --verse-size: 1.75rem;
+      --poem-title-size: 2.375rem;
+      --poem-byline-size: 1.375rem;
+    }
+  }
+
+  @media (width >= theme(--breakpoint-lg)) {
+    :root {
+      --gutter: 7.5rem;
+      --poem-gutter: 6rem;
+      --verse-size: 1.875rem;
+      --poem-title-size: 2.625rem;
+      --poem-byline-size: 1.5rem;
+      --poem-meta-size: 1.0625rem;
+    }
+  }
+
+  @media (width >= theme(--breakpoint-xl)) {
+    :root {
+      --gutter: 8rem;
+    }
+  }
+
+  @media (width >= theme(--breakpoint-md)) {
+    :root {
+      --display-size: 3rem;
+      --display-leading: 4rem;
+      --title-size: 2.125rem;
+      --title-leading: 3rem;
+      --heading-size: 1.5rem;
+      --heading-leading: 2.5rem;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-surface text-text;
+  }
+}
+
+astro-island {
+  display: contents;
+}
+
+.search-results-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.search-results-scroll::-webkit-scrollbar {
+  display: none;
+}

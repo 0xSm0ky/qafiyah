@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "astro-build.astro-vscode",
+    "bradlc.vscode-tailwindcss",
+    "streetsidesoftware.code-spell-checker",
+    "redhat.vscode-yaml",
+    "mikestead.dotenv",
+    "ms-azuretools.vscode-docker",
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml"
+  ]
+}

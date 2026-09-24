@@ -1,0 +1,100 @@
+---
+import { SearchWithProviders } from '@/components/search/search-with-providers';
+import Icon from '@/components/ui/icon.astro';
+import { SEARCH_TEXTS } from '@/lib/constants/copy';
+import { SITE_DESCRIPTION, SITE_NAME_AR, SITE_TITLE } from '@/lib/constants/site-meta';
+import { TYPE } from '@/lib/constants/design-tokens';
+import Layout from '@/layouts/layout.astro';
+import { organizationNode } from '@/lib/seo/json-ld/organization';
+import { websiteNode } from '@/lib/seo/json-ld/website';
+import { CACHE_HTML } from '@/lib/server/cache';
+
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+
+const jsonLd = [websiteNode(), organizationNode()];
+---
+
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION} canonical="/" jsonLd={jsonLd}>
+  <p class="text-opacity-0 pointer-events-none sr-only opacity-0" aria-hidden="true" tabindex="-1">
+    {SITE_DESCRIPTION}
+  </p>
+
+  <div class="relative flex min-h-full w-full flex-1 flex-col">
+    <div id="search-shell" class="pointer-events-none absolute inset-0 z-10 bg-surface select-none">
+      <section class="mx-auto flex w-full max-w-3xl flex-col justify-start pb-24">
+        <div class="h-[25svh] w-full"></div>
+        <div class="flex w-full flex-col gap-10 md:gap-16" dir="rtl">
+          <h1 class="sr-only">{SITE_NAME_AR}</h1>
+          <p class={`flex items-center justify-center py-2 text-center ${TYPE.display} text-text`}>
+            {SEARCH_TEXTS.currentHeaderTitle}
+          </p>
+          <div class="bg-transparent p-0">
+            <div class="flex flex-col gap-4">
+              <div class="w-full">
+                <div class="mb-2 h-4"></div>
+                <div class="relative">
+                  <input
+                    type="text"
+                    placeholder={SEARCH_TEXTS.poemsSearchPlaceholder}
+                    aria-label={SEARCH_TEXTS.poemsSearchPlaceholder}
+                    autocomplete="off"
+                    dir="rtl"
+                    readonly
+                    tabindex="-1"
+                    aria-hidden="true"
+                    class="flex h-12 w-full rounded-none border-0 border-b border-border bg-transparent px-3 pr-14 pl-14 text-right text-text shadow-none placeholder:text-text-subtle md:text-lg"
+                  />
+                  <div
+                    class="absolute top-1/2 right-2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-text-subtle"
+                    aria-hidden="true"
+                  >
+                    <Icon name="search" size={20} class="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <button
+                    type="button"
+                    aria-label="إظهار الفلاتر"
+                    tabindex="-1"
+                    aria-hidden="true"
+                    class="flex h-12 items-center gap-6 rounded-md border border-border bg-transparent px-4 text-base text-text-subtle shadow-none"
+                  >
+                    <Icon name="filter" size={16} class="h-4 w-4" />
+                    <Icon name="chevron-down" size={16} class="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={SEARCH_TEXTS.exactToggleEnableAria}
+                    tabindex="-1"
+                    aria-hidden="true"
+                    class="flex h-12 items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 text-base text-text-subtle shadow-none"
+                  >
+                    <Icon name="whole-word" size={16} class="h-4 w-4" />
+                    <span>{SEARCH_TEXTS.exactLabel}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <SearchWithProviders client:only="react" />
+    <noscript>
+      <div
+        class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-surface px-4 text-center"
+      >
+        <p class="text-text-muted">يتطلّب البحث تفعيل الجافاسكربت في المتصفح.</p>
+        <a
+          href="/poets"
+          class="rounded-md bg-accent px-5 py-2 text-sm text-surface focus-ring transition-colors hover:opacity-90"
+        >
+          تصفّح الشعراء
+        </a>
+      </div>
+    </noscript>
+  </div>
+</Layout>

@@ -1,0 +1,12 @@
+{
+  "extends": "@qafiyah/tsconfig/astro.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@qafiyah/config": ["../../config.ts"]
+    }
+  },
+  "include": ["src", "scripts", ".astro/types.d.ts", "src/pages/.well-known/**/*"],
+  "exclude": ["node_modules", "dist", ".astro"]
+}

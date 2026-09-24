@@ -1,0 +1,83 @@
+use axum::http::StatusCode;
+
+use crate::http_tests::{app_with, empty_hits};
+use crate::test_support::{FakeEs, request, send};
+
+#[tokio::test]
+async fn page_zero_and_overflow_are_refused_before_any_backend_call() {
+    let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    for path in [
+        "/v1/poems?page=0",
+        "/v1/poems?page=4294967296",
+        "/v1/poems/slugs?page=0",
+        "/v1/poets/slugs?page=0",
+        "/v1/poets?page=1667",
+        "/v1/poets?page=0",
+        "/v1/search?poemsPage=501",
+        "/v1/search?poetsPage=0",
+    ] {
+        let sent = send(app_with(&es), request("GET", path)).await;
+        assert_eq!(sent.status, StatusCode::BAD_REQUEST, "{path}");
+    }
+    assert!(es.requests().await.is_empty());
+}
+
+#[tokio::test]
+async fn search_refuses_a_poem_only_facet_when_poets_are_requested() {
+    let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    for path in [
+        "/v1/search?types[]=poets&meterSlugs[]=altawil",
+        "/v1/search?rhymeSlugs[]=meem",
+        "/v1/search?types[]=poems&types[]=poets&themeSlugs[]=alnasib",
+    ] {
+        assert_eq!(
+            send(app_with(&es), request("GET", path)).await.status,
+            StatusCode::BAD_REQUEST,
+            "{path}"
+        );
+    }
+    let ok = send(
+        app_with(&es),
+        request("GET", "/v1/search?types[]=poems&meterSlugs[]=altawil"),
+    )
+    .await;
+    assert_eq!(ok.status, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn search_q_is_not_trimmed_while_the_poets_list_trims_it_pinned() {
+    let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    let search = send(
+        app_with(&es),
+        request("GET", "/v1/search?q=%20%20&types[]=poems"),
+    )
+    .await;
+    assert_eq!(search.status, StatusCode::OK);
+    assert_eq!(search.json()["q"], "  ");
+    let sent_to_es = es.requests().await;
+    assert!(
+        sent_to_es[0].1["query"]["bool"]["filter"].is_array(),
+        "a whitespace query still searches"
+    );
+    let es2 = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    let poets = send(app_with(&es2), request("GET", "/v1/poets?q=%20%20")).await;
+    assert_eq!(poets.status, StatusCode::OK);
+    assert!(
+        es2.requests().await[0].1["query"]["bool"]["must"].is_array(),
+        "a trimmed empty query browses"
+    );
+}
+
+#[tokio::test]
+async fn unknown_parameters_and_injection_shaped_values_are_ignored() {
+    let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    let sent = send(
+        app_with(&es),
+        request(
+            "GET",
+            "/v1/search?foo=bar&injection=%27%20OR%201%3D1%20--&types[]=poems",
+        ),
+    )
+    .await;
+    assert_eq!(sent.status, StatusCode::OK);
+}

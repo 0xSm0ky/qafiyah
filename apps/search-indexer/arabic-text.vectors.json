@@ -1,0 +1,158 @@
+[
+  {
+    "note": "fatha, sukun, damma",
+    "input": "اِمْرُؤ القَيْس",
+    "stripTashkeel": "امرؤ القيس",
+    "foldForSort": "امرو القيس"
+  },
+  {
+    "note": "shadda",
+    "input": "المُتنبّي",
+    "stripTashkeel": "المتنبي",
+    "foldForSort": "المتنبي"
+  },
+  {
+    "note": "tanwin",
+    "input": "مَن مُبلِغٌ",
+    "stripTashkeel": "من مبلغ",
+    "foldForSort": "من مبلغ"
+  },
+  {
+    "note": "alef hamza above",
+    "input": "أحمد",
+    "stripTashkeel": "أحمد",
+    "foldForSort": "احمد"
+  },
+  {
+    "note": "alef hamza below",
+    "input": "إبراهيم",
+    "stripTashkeel": "إبراهيم",
+    "foldForSort": "ابراهيم"
+  },
+  {
+    "note": "alef madda",
+    "input": "آمنة",
+    "stripTashkeel": "آمنة",
+    "foldForSort": "امنه"
+  },
+  {
+    "note": "alef wasla",
+    "input": "ٱلحسن",
+    "stripTashkeel": "ٱلحسن",
+    "foldForSort": "الحسن"
+  },
+  {
+    "note": "alef maqsura",
+    "input": "يحيى",
+    "stripTashkeel": "يحيى",
+    "foldForSort": "يحيي"
+  },
+  {
+    "note": "ta marbuta",
+    "input": "عروة",
+    "stripTashkeel": "عروة",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "tatweel",
+    "input": "مـــحمد",
+    "stripTashkeel": "محمد",
+    "foldForSort": "محمد"
+  },
+  {
+    "note": "waw hamza",
+    "input": "رؤبة",
+    "stripTashkeel": "رؤبة",
+    "foldForSort": "روبه"
+  },
+  {
+    "note": "ya hamza",
+    "input": "جبرئيل",
+    "stripTashkeel": "جبرئيل",
+    "foldForSort": "جبرييل"
+  },
+  {
+    "note": "bare hamza",
+    "input": "جبيهاء",
+    "stripTashkeel": "جبيهاء",
+    "foldForSort": "جبيها"
+  },
+  {
+    "note": "every folding rule at once",
+    "input": "أإآٱىةـؤئء",
+    "stripTashkeel": "أإآٱىةؤئء",
+    "foldForSort": "اااايهوي"
+  },
+  {
+    "note": "ascii passthrough",
+    "input": "abc 123",
+    "stripTashkeel": "abc 123",
+    "foldForSort": "abc 123"
+  },
+  {
+    "note": "empty",
+    "input": "",
+    "stripTashkeel": "",
+    "foldForSort": ""
+  },
+  {
+    "note": "whitespace only",
+    "input": "   ",
+    "stripTashkeel": "   ",
+    "foldForSort": ""
+  },
+  {
+    "note": "surrounding spaces are trimmed by foldForSort only",
+    "input": "  عروة  ",
+    "stripTashkeel": "  عروة  ",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "quranic marks U+06D6-U+06ED",
+    "input": "اۖبۗجۭ",
+    "stripTashkeel": "ابج",
+    "foldForSort": "ابج"
+  },
+  {
+    "note": "U+061A is tashkeel, U+061B is not",
+    "input": "اؚب؛ج",
+    "stripTashkeel": "اب؛ج",
+    "foldForSort": "اب؛ج"
+  },
+  {
+    "note": "U+0640 tatweel is stripped by both paths",
+    "input": "اـب",
+    "stripTashkeel": "اب",
+    "foldForSort": "اب"
+  },
+  {
+    "note": "U+FEFF is trimmed by js but is not rust whitespace",
+    "input": "﻿عروة﻿",
+    "stripTashkeel": "﻿عروة﻿",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "U+0085 is rust whitespace but is not js WhiteSpace",
+    "input": "عروة",
+    "stripTashkeel": "عروة",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "U+00A0 nbsp is trimmed by both",
+    "input": " عروة ",
+    "stripTashkeel": " عروة ",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "U+2028 line separator is trimmed by both",
+    "input": " عروة ",
+    "stripTashkeel": " عروة ",
+    "foldForSort": "عروه"
+  },
+  {
+    "note": "tab and newline are trimmed by both",
+    "input": "\t\nعروة\n\t",
+    "stripTashkeel": "\t\nعروة\n\t",
+    "foldForSort": "عروه"
+  }
+]

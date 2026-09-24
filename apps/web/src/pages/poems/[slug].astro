@@ -1,0 +1,64 @@
+---
+import type { PoemSlug } from '@/lib/api/brands';
+import Breadcrumbs from '@/components/breadcrumbs.astro';
+import AdjacentPoems from '@/components/adjacent-poems.astro';
+import { PoemDisplay } from '@/components/poem-display';
+import RelatedPoems from '@/components/related-poems.astro';
+import Layout from '@/layouts/layout.astro';
+import { buildPoemLayout } from '@/lib/seo/poem-page';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { getPoem } from '@/lib/server/poems';
+
+const { slug } = Astro.params;
+const detail = slug ? await getPoem(slug as PoemSlug) : null;
+if (!detail) return Astro.rewrite('/404');
+
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+const poem = detail;
+const layout = buildPoemLayout(detail, slug as PoemSlug);
+---
+
+<Layout
+  title={layout.title}
+  description={layout.description}
+  canonical={layout.canonical}
+  prevUrl={layout.adjacentPoems.prevHref}
+  nextUrl={layout.adjacentPoems.nextHref}
+  ogType="article"
+  ogTitle={layout.ogTitle}
+  ogDescription={layout.ogDescription}
+  twitterTitle={layout.twitterTitle}
+  twitterDescription={layout.twitterDescription}
+  articleAuthor={layout.articleAuthor}
+  articleSection={layout.articleSection}
+  jsonLd={layout.jsonLd}
+>
+  <div class="w-full">
+    <div class="pt-8 xs:pt-10">
+      <Breadcrumbs items={layout.crumbItems} />
+    </div>
+    <div class="my-14 flex w-full flex-col items-center gap-10 xs:my-20 lg:my-28">
+      <div class="flex w-full max-w-5xl flex-col items-center gap-10">
+        <PoemDisplay
+          client:idle
+          title={poem.title}
+          poet={poem.poet}
+          era={poem.era}
+          meter={poem.meter}
+          theme={poem.theme}
+          verses={poem.verses}
+          verseCount={poem.verseCount}
+          poemType={poem.poemType}
+        />
+      </div>
+      <AdjacentPoems
+        prevHref={layout.adjacentPoems.prevHref}
+        prevTitle={layout.adjacentPoems.prevTitle}
+        nextHref={layout.adjacentPoems.nextHref}
+        nextTitle={layout.adjacentPoems.nextTitle}
+        hidden={layout.adjacentPoems.hidden}
+      />
+      <RelatedPoems relatedPoems={poem.relatedPoems} />
+    </div>
+  </div>
+</Layout>

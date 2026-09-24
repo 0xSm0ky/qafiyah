@@ -1,0 +1,197 @@
+use serde::Serialize;
+
+use crate::arabic::{fold_for_sort, strip_tashkeel};
+
+pub(crate) struct PoemSource {
+    pub id: i32,
+    pub slug: String,
+    pub title: String,
+    pub content: String,
+    pub poet_name: String,
+    pub poet_slug: String,
+    pub poet_has_avatar: bool,
+    pub era_name: String,
+    pub era_slug: String,
+    pub meter_name: String,
+    pub meter_slug: String,
+    pub theme_slug: String,
+    pub rhyme_slug: String,
+    pub collection_slug: String,
+}
+
+pub(crate) struct PoetSource {
+    pub id: i32,
+    pub slug: String,
+    pub name: String,
+    pub era_name: String,
+    pub era_slug: String,
+    pub poems_count: i32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct PoemDoc {
+    pub id: i32,
+    pub slug: String,
+    pub title: String,
+    pub content: String,
+    pub poet_name: String,
+    pub title_display: String,
+    pub poet_name_display: String,
+    pub poet_slug: String,
+    pub poet_has_avatar: bool,
+    pub era_slug: String,
+    pub era_name: String,
+    pub meter_slug: String,
+    pub meter_name: String,
+    pub theme_slug: String,
+    pub rhyme_slug: String,
+    pub collection_slug: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct PoetDoc {
+    pub id: i32,
+    pub slug: String,
+    pub name: String,
+    pub name_display: String,
+    pub name_sort: String,
+    pub poems_count: i32,
+    pub era_slug: String,
+    pub era_name: String,
+}
+
+pub(crate) fn to_poem_doc(src: PoemSource) -> PoemDoc {
+    PoemDoc {
+        id: src.id,
+        slug: src.slug,
+        title: strip_tashkeel(&src.title),
+        content: src.content,
+        poet_name: strip_tashkeel(&src.poet_name),
+        title_display: src.title,
+        poet_name_display: src.poet_name,
+        poet_slug: src.poet_slug,
+        poet_has_avatar: src.poet_has_avatar,
+        era_slug: src.era_slug,
+        era_name: src.era_name,
+        meter_slug: src.meter_slug,
+        meter_name: src.meter_name,
+        theme_slug: src.theme_slug,
+        rhyme_slug: src.rhyme_slug,
+        collection_slug: src.collection_slug,
+    }
+}
+
+pub(crate) fn to_poet_doc(src: PoetSource, rules: &[(String, String)]) -> PoetDoc {
+    PoetDoc {
+        id: src.id,
+        slug: src.slug,
+        name: strip_tashkeel(&src.name),
+        name_sort: fold_for_sort(&src.name, rules),
+        name_display: src.name,
+        poems_count: src.poems_count,
+        era_slug: src.era_slug,
+        era_name: src.era_name,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeSet;
+
+    fn poem() -> PoemSource {
+        PoemSource {
+            id: 7,
+            slug: "TnKK".into(),
+            title: "قَصِيدَة".into(),
+            content: "أ*ب".into(),
+            poet_name: "المُتَنَبِّي".into(),
+            poet_slug: "yoFB".into(),
+            poet_has_avatar: true,
+            era_name: "عباسي".into(),
+            era_slug: "abbasi".into(),
+            meter_name: "الطويل".into(),
+            meter_slug: "altawil".into(),
+            theme_slug: "alnasib".into(),
+            rhyme_slug: "meem".into(),
+            collection_slug: String::new(),
+        }
+    }
+
+    fn poet() -> PoetSource {
+        PoetSource {
+            id: 3,
+            slug: "yoFB".into(),
+            name: " أَحْمَد ".into(),
+            era_name: "عباسي".into(),
+            era_slug: "abbasi".into(),
+            poems_count: 42,
+        }
+    }
+
+    fn rules() -> Vec<(String, String)> {
+        qafiyah_elasticsearch::folding_rules(&qafiyah_elasticsearch::load().poems)
+    }
+
+    #[test]
+    fn a_poem_document_strips_searchable_text_and_keeps_the_originals_for_display() {
+        let doc = to_poem_doc(poem());
+        assert_eq!(doc.title, "قصيدة");
+        assert_eq!(doc.title_display, "قَصِيدَة");
+        assert_eq!(doc.poet_name, "المتنبي");
+        assert_eq!(doc.poet_name_display, "المُتَنَبِّي");
+        assert_eq!(doc.content, "أ*ب", "content is never stripped in Rust");
+        assert_eq!(
+            (doc.id, doc.slug.as_str(), doc.collection_slug.as_str()),
+            (7, "TnKK", "")
+        );
+        assert!(doc.poet_has_avatar);
+    }
+
+    #[test]
+    fn a_poet_document_folds_the_sort_key_and_trims_it() {
+        let doc = to_poet_doc(poet(), &rules());
+        assert_eq!(doc.name, " أحمد ");
+        assert_eq!(doc.name_sort, "احمد");
+        assert_eq!(doc.name_display, " أَحْمَد ");
+        assert_eq!(doc.poems_count, 42);
+    }
+
+    #[test]
+    fn a_poem_with_empty_content_still_maps() {
+        let mut source = poem();
+        source.content = String::new();
+        assert_eq!(to_poem_doc(source).content, "");
+    }
+
+    #[test]
+    fn the_document_keys_match_the_strict_mappings_exactly() {
+        let schema = qafiyah_elasticsearch::load();
+        let keys = |value: serde_json::Value| {
+            value
+                .as_object()
+                .expect("object")
+                .keys()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+        };
+        let mapped = |body: &serde_json::Value| {
+            body["mappings"]["properties"]
+                .as_object()
+                .expect("properties")
+                .keys()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+        };
+        assert_eq!(
+            keys(serde_json::to_value(to_poem_doc(poem())).expect("json")),
+            mapped(&schema.poems)
+        );
+        assert_eq!(
+            keys(serde_json::to_value(to_poet_doc(poet(), &rules())).expect("json")),
+            mapped(&schema.poets)
+        );
+    }
+}

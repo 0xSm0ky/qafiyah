@@ -1,0 +1,146 @@
+---
+import {
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_DESCRIPTION,
+  SITE_LANGUAGE,
+  SITE_NAME_AR,
+  SITE_THEME_COLOR_HEX,
+  SITE_TITLE,
+  TWITTER_HANDLE,
+  TWITTER_ID,
+  type SocialImage,
+  type TwitterCard,
+} from '@/lib/constants/site-meta';
+import { SITE_URL } from '@/lib/constants/config';
+import { serializeJsonLd, type AnyJsonLdDoc } from '@/lib/seo/serialize-json-ld';
+
+type OgType = 'website' | 'article' | 'profile' | 'book';
+
+export interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+  canonical?: string | undefined;
+  ogType?: OgType | undefined;
+  ogTitle?: string | undefined;
+  ogDescription?: string | undefined;
+  socialImage?: SocialImage | undefined;
+  twitterImage?: SocialImage | undefined;
+  twitterCard?: TwitterCard | undefined;
+  twitterTitle?: string | undefined;
+  twitterDescription?: string | undefined;
+  articleAuthor?: string | undefined;
+  articleSection?: string | undefined;
+  robotsIndex?: boolean | undefined;
+  prevUrl?: string | undefined;
+  nextUrl?: string | undefined;
+  jsonLd?: AnyJsonLdDoc | readonly AnyJsonLdDoc[] | undefined;
+  preconnect?: readonly string[] | undefined;
+}
+
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  canonical = '/',
+  ogType = 'website',
+  ogTitle,
+  ogDescription,
+  socialImage = DEFAULT_SOCIAL_IMAGE,
+  twitterImage,
+  twitterCard = 'summary_large_image',
+  twitterTitle,
+  twitterDescription,
+  articleAuthor,
+  articleSection,
+  robotsIndex = true,
+  prevUrl,
+  nextUrl,
+  jsonLd,
+  preconnect = [],
+} = Astro.props;
+
+const absolutize = (value: string): string =>
+  value.startsWith('http') ? value : `${SITE_URL}${value}`;
+
+const canonicalUrl = absolutize(canonical);
+const resolvedOgImageUrl = absolutize(socialImage.url);
+const resolvedTwitterImage = twitterImage ?? socialImage;
+const resolvedTwitterImageUrl = absolutize(resolvedTwitterImage.url);
+const resolvedOgTitle = ogTitle ?? title;
+const resolvedOgDescription = ogDescription ?? description;
+const resolvedTwitterTitle = twitterTitle ?? title;
+const resolvedTwitterDescription = twitterDescription ?? description;
+const robotsContent = robotsIndex ? 'index, follow, max-image-preview:large' : 'noindex, follow';
+const jsonLdRaw = jsonLd ?? [];
+const jsonLdEntries = Array.isArray(jsonLdRaw) ? jsonLdRaw : [jsonLdRaw];
+
+const allPreconnect = [...new Set(preconnect)];
+const isArticle = ogType === 'article';
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content={SITE_THEME_COLOR_HEX} />
+<meta name="color-scheme" content="light dark" />
+<meta name="format-detection" content="telephone=no" />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="author" content={SITE_NAME_AR} />
+<meta name="robots" content={robotsContent} />
+<meta name="googlebot" content={robotsContent} />
+
+{robotsIndex && <link rel="canonical" href={canonicalUrl} />}
+{robotsIndex && <link rel="alternate" hreflang={SITE_LANGUAGE} href={canonicalUrl} />}
+{prevUrl && <link rel="prev" href={absolutize(prevUrl)} />}
+{nextUrl && <link rel="next" href={absolutize(nextUrl)} />}
+
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={SITE_NAME_AR} />
+<meta property="og:locale" content="ar_AR" />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:title" content={resolvedOgTitle} />
+<meta property="og:description" content={resolvedOgDescription} />
+<meta property="og:image" content={resolvedOgImageUrl} />
+<meta property="og:image:secure_url" content={resolvedOgImageUrl} />
+{
+  socialImage.width !== undefined && (
+    <meta property="og:image:width" content={String(socialImage.width)} />
+  )
+}
+{
+  socialImage.height !== undefined && (
+    <meta property="og:image:height" content={String(socialImage.height)} />
+  )
+}
+<meta property="og:image:type" content={socialImage.mimeType} />
+<meta property="og:image:alt" content={socialImage.alt} />
+
+{
+  isArticle && articleAuthor && (
+    <meta property="article:author" content={absolutize(articleAuthor)} />
+  )
+}
+{isArticle && articleSection && <meta property="article:section" content={articleSection} />}
+
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:site" content={TWITTER_HANDLE} />
+<meta name="twitter:creator" content={TWITTER_HANDLE} />
+<meta name="twitter:creator:id" content={TWITTER_ID} />
+<meta name="twitter:title" content={resolvedTwitterTitle} />
+<meta name="twitter:description" content={resolvedTwitterDescription} />
+<meta name="twitter:image" content={resolvedTwitterImageUrl} />
+<meta name="twitter:image:alt" content={resolvedTwitterImage.alt} />
+
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/logo.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.json" />
+
+<link rel="preload" href="/fonts/Amiri-Regular-400.woff2" as="font" type="font/woff2" crossorigin />
+{allPreconnect.map((origin) => <link rel="preconnect" href={origin} crossorigin />)}
+
+{
+  jsonLdEntries.map((entry) => (
+    <script is:inline type="application/ld+json" set:html={serializeJsonLd(entry)} />
+  ))
+}

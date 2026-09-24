@@ -1,0 +1,11 @@
+[Unit]
+Description=Back up the qafiyah_accounts database to R2
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/qafiyah
+EnvironmentFile=/opt/qafiyah/.env
+ExecStart=/opt/qafiyah/scripts/accounts/backup.sh

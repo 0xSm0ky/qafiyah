@@ -1,0 +1,83 @@
+export type ArabicNounForms = {
+  readonly singular: string;
+  readonly dual: string;
+  readonly plural: string;
+};
+
+const DIGIT_LOOKUP: Readonly<Record<string, string>> = {
+  '0': '٠',
+  '1': '١',
+  '2': '٢',
+  '3': '٣',
+  '4': '٤',
+  '5': '٥',
+  '6': '٦',
+  '7': '٧',
+  '8': '٨',
+  '9': '٩',
+};
+
+export function toArabicDigits(input: number | string): string {
+  return String(input).replaceAll(/[0-9]/g, (d) => DIGIT_LOOKUP[d] ?? d);
+}
+
+const ARABIC_LOCALE = 'ar-SA';
+
+export function formatArabicCount({
+  count,
+  nounForms,
+}: {
+  readonly count: number;
+  readonly nounForms: ArabicNounForms;
+}): string {
+  const { singular, dual, plural } = nounForms;
+  const absoluteCount = Math.abs(count);
+  const formattedNumber = new Intl.NumberFormat(ARABIC_LOCALE).format(absoluteCount);
+
+  if (!Number.isInteger(absoluteCount)) {
+    return `${formattedNumber} ${singular}`;
+  }
+
+  switch (true) {
+    case absoluteCount === 0:
+      return `لا ${singular}`;
+    case absoluteCount === 1:
+      return singular;
+    case absoluteCount === 2:
+      return dual;
+    case absoluteCount <= 10:
+      return `${formattedNumber} ${plural}`;
+    default:
+      return `${formattedNumber} ${singular}`;
+  }
+}
+
+const NON_ARABIC_AND_SPACE_REGEX = /[^؀-ۿݐ-ݿࢠ-ࣿ\s]/g;
+
+export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;
+
+const WHITESPACE_RUN_REGEX = /\s+/g;
+const LEADING_WHITESPACE_REGEX = /^\s+/;
+
+const INVISIBLE_FORMATTING_REGEX = /[\u200B-\u200F\u202A-\u202E\u2066-\u2069\u061C]/g;
+
+export function sanitizeArabicInput(raw: string): string {
+  return raw
+    .replace(INVISIBLE_FORMATTING_REGEX, '')
+    .replace(NON_ARABIC_AND_SPACE_REGEX, '')
+    .replace(WHITESPACE_RUN_REGEX, ' ')
+    .replace(LEADING_WHITESPACE_REGEX, '');
+}
+
+export function stripInputNoise(raw: string): string {
+  return raw
+    .replace(INVISIBLE_FORMATTING_REGEX, '')
+    .replace(WHITESPACE_RUN_REGEX, ' ')
+    .replace(LEADING_WHITESPACE_REGEX, '');
+}
+
+const TASHKEEL_REGEX = /[ؐ-ًؚ-ٰٟۖ-ۭـ]/g;
+
+export function stripTashkeel(text: string): string {
+  return text.replace(TASHKEEL_REGEX, '');
+}

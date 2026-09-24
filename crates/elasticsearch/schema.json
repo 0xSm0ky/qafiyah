@@ -1,0 +1,287 @@
+{
+  "poems": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "analysis": {
+        "char_filter": {
+          "arabic_letter_folding": {
+            "type": "mapping",
+            "mappings": [
+              "أ => ا",
+              "إ => ا",
+              "آ => ا",
+              "ٱ => ا",
+              "ى => ي",
+              "ة => ه",
+              "ـ => ",
+              "ؤ => و",
+              "ئ => ي",
+              "ء => "
+            ]
+          }
+        },
+        "filter": {
+          "arabic_stop_filter": {
+            "type": "stop",
+            "stopwords": "_arabic_"
+          },
+          "arabic_stemmer_filter": {
+            "type": "stemmer",
+            "language": "arabic"
+          },
+          "edge_ngram_2": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 20
+          }
+        },
+        "analyzer": {
+          "arabic_normalized": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": ["lowercase", "decimal_digit", "arabic_normalization"]
+          },
+          "arabic_stemmed": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "decimal_digit",
+              "arabic_stop_filter",
+              "arabic_normalization",
+              "arabic_stemmer_filter"
+            ]
+          },
+          "autocomplete_2": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": ["lowercase", "decimal_digit", "arabic_normalization", "edge_ngram_2"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "dynamic": "strict",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "keyword"
+        },
+        "title": {
+          "type": "text",
+          "analyzer": "arabic_normalized",
+          "fields": {
+            "exact": {
+              "type": "keyword",
+              "ignore_above": 256
+            },
+            "stemmed": {
+              "type": "text",
+              "analyzer": "arabic_stemmed"
+            },
+            "autocomplete": {
+              "type": "text",
+              "analyzer": "autocomplete_2",
+              "search_analyzer": "arabic_normalized"
+            }
+          }
+        },
+        "content": {
+          "type": "text",
+          "analyzer": "arabic_normalized",
+          "fields": {
+            "stemmed": {
+              "type": "text",
+              "analyzer": "arabic_stemmed"
+            }
+          }
+        },
+        "poetName": {
+          "type": "text",
+          "analyzer": "arabic_normalized",
+          "fields": {
+            "exact": {
+              "type": "keyword",
+              "ignore_above": 256
+            },
+            "stemmed": {
+              "type": "text",
+              "analyzer": "arabic_stemmed"
+            },
+            "autocomplete": {
+              "type": "text",
+              "analyzer": "autocomplete_2",
+              "search_analyzer": "arabic_normalized"
+            }
+          }
+        },
+        "titleDisplay": {
+          "type": "keyword",
+          "index": false
+        },
+        "poetNameDisplay": {
+          "type": "keyword",
+          "index": false
+        },
+        "poetHasAvatar": {
+          "type": "boolean"
+        },
+        "poetSlug": {
+          "type": "keyword"
+        },
+        "eraSlug": {
+          "type": "keyword"
+        },
+        "eraName": {
+          "type": "keyword",
+          "index": false
+        },
+        "meterSlug": {
+          "type": "keyword"
+        },
+        "meterName": {
+          "type": "keyword",
+          "index": false
+        },
+        "themeSlug": {
+          "type": "keyword"
+        },
+        "rhymeSlug": {
+          "type": "keyword"
+        },
+        "collectionSlug": {
+          "type": "keyword"
+        }
+      }
+    }
+  },
+  "poets": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "max_result_window": 50000,
+      "analysis": {
+        "char_filter": {
+          "arabic_letter_folding": {
+            "type": "mapping",
+            "mappings": [
+              "أ => ا",
+              "إ => ا",
+              "آ => ا",
+              "ٱ => ا",
+              "ى => ي",
+              "ة => ه",
+              "ـ => ",
+              "ؤ => و",
+              "ئ => ي",
+              "ء => "
+            ]
+          }
+        },
+        "filter": {
+          "arabic_stop_filter": {
+            "type": "stop",
+            "stopwords": "_arabic_"
+          },
+          "arabic_stemmer_filter": {
+            "type": "stemmer",
+            "language": "arabic"
+          },
+          "edge_ngram_2": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 20
+          }
+        },
+        "analyzer": {
+          "arabic_normalized": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": ["lowercase", "decimal_digit", "arabic_normalization"]
+          },
+          "arabic_stemmed": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "decimal_digit",
+              "arabic_stop_filter",
+              "arabic_normalization",
+              "arabic_stemmer_filter"
+            ]
+          },
+          "autocomplete_2": {
+            "type": "custom",
+            "char_filter": ["arabic_letter_folding"],
+            "tokenizer": "standard",
+            "filter": ["lowercase", "decimal_digit", "arabic_normalization", "edge_ngram_2"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "dynamic": "strict",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "text",
+          "analyzer": "arabic_normalized",
+          "fields": {
+            "exact": {
+              "type": "keyword",
+              "ignore_above": 256
+            },
+            "stemmed": {
+              "type": "text",
+              "analyzer": "arabic_stemmed"
+            },
+            "autocomplete": {
+              "type": "text",
+              "analyzer": "autocomplete_2",
+              "search_analyzer": "arabic_normalized"
+            }
+          }
+        },
+        "nameDisplay": {
+          "type": "keyword",
+          "index": false
+        },
+        "nameSort": {
+          "type": "keyword"
+        },
+        "poemsCount": {
+          "type": "integer"
+        },
+        "eraSlug": {
+          "type": "keyword"
+        },
+        "eraName": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    }
+  },
+  "identity": {
+    "poemsAlias": "poems",
+    "poetsAlias": "poets",
+    "poemsPrefix": "poems_v",
+    "poetsPrefix": "poets_v",
+    "apiUsername": "qafiyah_api",
+    "apiRole": "qafiyah_reader",
+    "bulkBatchSize": 1000
+  }
+}

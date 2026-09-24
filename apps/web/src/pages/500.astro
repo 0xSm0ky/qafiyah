@@ -1,0 +1,53 @@
+---
+import {
+  ERROR_TEXTS,
+  SERVER_ERROR_CODE,
+  SERVER_ERROR_MESSAGE_AR,
+  SERVER_ERROR_TITLE,
+} from '@/lib/constants/copy';
+import { SUPPORT_EMAIL } from '@/lib/constants/config';
+import Layout from '@/layouts/layout.astro';
+import { CACHE_NONE } from '@/lib/server/cache';
+
+Astro.response.status = 500;
+Astro.response.headers.set('Cache-Control', CACHE_NONE);
+
+const retryHref = `${Astro.url.pathname}${Astro.url.search}`;
+---
+
+<Layout title={SERVER_ERROR_TITLE} description={SERVER_ERROR_MESSAGE_AR} robotsIndex={false}>
+  <div class="mx-auto flex h-full flex-col items-center justify-center gap-12 text-center">
+    <div class="flex flex-col items-center justify-center gap-2">
+      <h1 class="text-9xl text-text-subtle">{SERVER_ERROR_CODE}</h1>
+      <p class="text-4xl leading-[1.45] text-text-muted">{SERVER_ERROR_MESSAGE_AR}</p>
+    </div>
+
+    <div class="flex flex-col items-center gap-5">
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a
+          href={retryHref}
+          class="rounded-md bg-accent px-5 py-2 text-caption text-surface focus-ring transition-colors hover:opacity-90"
+        >
+          {ERROR_TEXTS.retry}
+        </a>
+        <a
+          href="/"
+          class="rounded-md border border-border bg-transparent px-5 py-2 text-caption text-text-muted focus-ring transition-colors hover:bg-surface-hover"
+        >
+          {ERROR_TEXTS.goHome}
+        </a>
+      </div>
+
+      <p class="text-sm text-text-subtle">
+        {ERROR_TEXTS.supportPrefix}{' '}
+        <a
+          href={`mailto:${SUPPORT_EMAIL}`}
+          dir="ltr"
+          class="rounded-sm text-text-muted underline underline-offset-2 focus-ring hover:text-text"
+        >
+          {SUPPORT_EMAIL}
+        </a>
+      </p>
+    </div>
+  </div>
+</Layout>

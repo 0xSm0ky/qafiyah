@@ -1,0 +1,141 @@
+---
+import { AccountControl } from '@/components/layout/account-control';
+import Logo from '@/components/layout/logo.astro';
+import Icon from '@/components/ui/icon.astro';
+import { NAV_LINKS } from '@/lib/constants/site-meta';
+import { cn } from '@/lib/utils';
+
+const RESPONSIVE_ICON_SIZE = 'size-6 xxs:size-7';
+
+const path = Astro.url.pathname;
+
+const isActiveLink = (href: string): boolean => {
+  if (href === '/') return path === '/';
+  const firstSegment = href.split('/')[1];
+  if (!firstSegment) return false;
+  return path === `/${firstSegment}` || path.startsWith(`/${firstSegment}/`);
+};
+---
+
+<nav
+  class="sticky top-0 z-10 -mx-(--gutter) bg-surface px-(--gutter) py-2"
+  aria-label="القائمة الرئيسية"
+>
+  <div class="w-full">
+    <div class="flex items-center justify-between gap-8">
+      <a href="/" class="flex items-center rounded-md focus-ring" aria-label="قافية - الرئيسة">
+        <Logo class={cn('size-10', 'md:size-12', 'xl:size-14')} />
+      </a>
+      <div class="flex items-center gap-3 sm:hidden">
+        <AccountControl client:load compact />
+        <button
+          id="qaf-menu-open"
+          type="button"
+          class="-ml-1 inline-flex min-h-11 items-center rounded-md px-1 text-text-muted focus-ring transition-colors duration-200 hover:text-text"
+          aria-label="فتح القائمة"
+          aria-controls="qaf-mobile-menu"
+          aria-expanded="false"
+        >
+          <Icon name="menu" class={RESPONSIVE_ICON_SIZE} strokeWidth={1.5} />
+        </button>
+      </div>
+      <ul
+        class="hidden text-sm leading-[1.5] sm:flex sm:min-h-8 sm:flex-row sm:gap-3 md:gap-3.5 md:text-base xl:gap-4 xl:text-lg"
+      >
+        {
+          NAV_LINKS.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                target={link.isExternal ? '_blank' : undefined}
+                rel={link.isExternal ? 'noopener noreferrer' : undefined}
+                class:list={[
+                  'optical-center rounded-sm text-text-muted focus-ring duration-200 hover:text-text hover:underline sm:top-[0.43em] md:top-[0.3em] xl:top-[0.2em]',
+                  isActiveLink(link.href) &&
+                    'text-text underline decoration-highlight decoration-2 underline-offset-4',
+                ]}
+              >
+                {link.name}
+              </a>
+            </li>
+          ))
+        }
+        <li class="hidden items-center in-data-viewer:flex">
+          <AccountControl client:load />
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div
+  id="qaf-mobile-menu"
+  inert
+  aria-hidden="true"
+  class="pointer-events-none fixed inset-0 z-20 flex translate-x-full transform flex-col overflow-auto bg-surface px-6 pb-16 transition-transform duration-300 ease-in-out"
+>
+  <nav class="flex flex-1 flex-col justify-end" aria-label="القائمة الرئيسية (موبايل)">
+    <ul class="flex flex-col items-end text-2xl leading-[1.45] xxs:text-3xl">
+      {
+        [...NAV_LINKS].reverse().map((link) => (
+          <li class="w-full border-b border-border text-right">
+            <a
+              tabindex="-1"
+              data-mobile-link
+              href={link.href}
+              target={link.isExternal ? '_blank' : undefined}
+              rel={link.isExternal ? 'noopener noreferrer' : undefined}
+              class:list={[
+                'block rounded-sm py-5 text-text-muted focus-ring hover:text-text',
+                isActiveLink(link.href) &&
+                  'text-text underline decoration-highlight decoration-2 underline-offset-4',
+              ]}
+            >
+              {link.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <button
+    id="qaf-menu-close"
+    type="button"
+    tabindex="-1"
+    class="absolute top-2 left-4 -ml-1 inline-flex min-h-11 items-center rounded-md px-1 text-text-muted focus-ring transition-colors duration-200 hover:text-text"
+    aria-label="إغلاق القائمة"
+  >
+    <Icon name="menu-close" class={RESPONSIVE_ICON_SIZE} strokeWidth={1.5} />
+  </button>
+</div>
+
+<script>
+  const openBtn = document.querySelector('#qaf-menu-open');
+  const closeBtn = document.querySelector<HTMLButtonElement>('#qaf-menu-close');
+  const menu = document.querySelector('#qaf-mobile-menu');
+  if (openBtn && closeBtn && menu) {
+    const links = menu.querySelectorAll<HTMLAnchorElement>('a[data-mobile-link]');
+
+    const setOpen = (isOpen: boolean) => {
+      menu.classList.toggle('translate-x-full', !isOpen);
+      menu.classList.toggle('pointer-events-none', !isOpen);
+      menu.classList.toggle('translate-x-0', isOpen);
+      menu.setAttribute('aria-hidden', String(!isOpen));
+      if (isOpen) menu.removeAttribute('inert');
+      else menu.setAttribute('inert', '');
+      openBtn.setAttribute('aria-expanded', String(isOpen));
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+      for (const l of links) l.tabIndex = isOpen ? 0 : -1;
+      closeBtn.tabIndex = isOpen ? 0 : -1;
+    };
+
+    openBtn.addEventListener('click', () => setOpen(true));
+    closeBtn.addEventListener('click', () => setOpen(false));
+    for (const l of links) l.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.getAttribute('aria-hidden') === 'false') {
+        setOpen(false);
+      }
+    });
+  }
+</script>

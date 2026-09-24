@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in the site, the API, or the local dev setup behaves incorrectly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, do not open an issue. See [SECURITY.md](https://github.com/raaqimorg/qafiyah/blob/main/.github/SECURITY.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Website (qafiyah.com)
+        - API (api.qafiyah.com)
+        - Search results
+        - Poem or poet data (wrong text, wrong attribution)
+        - Local development setup
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead. Include the URL or API request if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Search for ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser and version, or OS and Bun version for a local dev issue. Skip if it is a data issue.

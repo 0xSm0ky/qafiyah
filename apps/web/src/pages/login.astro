@@ -1,0 +1,88 @@
+---
+import { buttonVariants } from '@/components/ui/button';
+import Logo from '@/components/layout/logo.astro';
+import BrandIcon from '@/components/ui/brand-icon.astro';
+import Layout from '@/layouts/layout.astro';
+import { CACHE_NONE } from '@/lib/server/cache';
+import { providerConfigured } from '@/lib/server/env';
+import { resolveViewer } from '@/lib/server/session';
+import { withBrand } from '@/lib/seo/meta-text';
+import { cn } from '@/lib/utils';
+
+export const prerender = false;
+
+const viewer = await resolveViewer(Astro.request.headers.get('cookie'));
+if (viewer !== undefined) {
+  return new Response(null, {
+    status: 302,
+    headers: { Location: '/account', 'Cache-Control': CACHE_NONE },
+  });
+}
+
+Astro.response.headers.set('Cache-Control', CACHE_NONE);
+
+const TITLE = withBrand('تسجيل الدخول');
+const DESCRIPTION = 'سجّل الدخول إلى حسابك في قافية.';
+const failed = Astro.url.searchParams.has('error');
+
+const PROVIDER_CLASS = cn(
+  buttonVariants({ variant: 'outline' }),
+  'h-11 w-full gap-3 rounded-lg text-sm font-medium'
+);
+---
+
+<Layout title={TITLE} description={DESCRIPTION} robotsIndex={false} bare>
+  <div class="mx-auto flex w-full max-w-sm flex-col gap-8">
+    <header class="flex flex-col items-center gap-2 text-center">
+      <a
+        href="/"
+        class="mb-2 rounded-md opacity-80 focus-ring transition-opacity hover:opacity-100"
+        aria-label="قافية - الرئيسة"
+      >
+        <Logo class="size-12" />
+      </a>
+      <h1 class="sr-only">تسجيل الدخول</h1>
+      <p class="text-base text-text-muted">سجل دخول باستعمال إحدى الطرق التالية</p>
+    </header>
+
+    {
+      failed && (
+        <p
+          role="alert"
+          class="rounded-lg border border-danger px-4 py-3 text-center text-sm text-danger"
+        >
+          تعذّر تسجيل الدخول. حاول مرة أخرى.
+        </p>
+      )
+    }
+
+    <div class="flex flex-col gap-3">
+      {
+        providerConfigured('google') && (
+          <a class={PROVIDER_CLASS} href="/auth/google" rel="nofollow">
+            <BrandIcon name="google" size={18} />
+            المتابعة باستعمال قوقل
+          </a>
+        )
+      }
+      {
+        providerConfigured('github') && (
+          <a class={PROVIDER_CLASS} href="/auth/github" rel="nofollow">
+            <BrandIcon name="github" size={18} />
+            المتابعة باستعمال قتهب
+          </a>
+        )
+      }
+    </div>
+
+    <a
+      class={cn(
+        buttonVariants({ variant: 'ghost' }),
+        'mx-auto text-sm text-text-muted hover:text-text'
+      )}
+      href="/"
+    >
+      العودة إلى الصفحة الرئيسة
+    </a>
+  </div>
+</Layout>

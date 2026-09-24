@@ -1,0 +1,49 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalPassThroughEnv": [
+    "SMOKE_TARGET",
+    "SMOKE_API_KEY",
+    "API_KEY_FULL",
+    "SMOKE_CONCURRENCY",
+    "NO_COLOR"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", "!dist/**/*.tsbuildinfo", "out/**"],
+      "passThroughEnv": ["SENTRY_AUTH_TOKEN"]
+    },
+    "types": {
+      "dependsOn": ["^types"],
+      "inputs": ["src/**/*.{ts,tsx,astro}", "*.{ts,json}", "tsconfig.json"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.{ts,tsx,astro}", "*.{ts,json}", "vitest.config.*"],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "ELASTICSEARCH_URL",
+        "ELASTIC_PASSWORD",
+        "WEB_PORT",
+        "INSPECTOR_PORT",
+        "WEB_BASE_URL",
+        "INTERNAL_API_URL",
+        "INTERNAL_API_KEY",
+        "OAUTH_GOOGLE_CLIENT_ID",
+        "OAUTH_GOOGLE_CLIENT_SECRET",
+        "OAUTH_GITHUB_CLIENT_ID",
+        "OAUTH_GITHUB_CLIENT_SECRET",
+        "SESSION_STATE_SECRET"
+      ]
+    }
+  },
+  "globalDependencies": ["**/.env.*local", ".env", "turbo.json", "package.json", "config.ts"]
+}

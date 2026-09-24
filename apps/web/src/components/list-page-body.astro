@@ -1,0 +1,85 @@
+---
+import Breadcrumbs from '@/components/breadcrumbs.astro';
+import Pagination from '@/components/pagination.astro';
+import { ListCard } from '@/components/ui-extended/list-card';
+import { ERROR_TEXTS } from '@/lib/constants/copy';
+import { SUPPORT_EMAIL } from '@/lib/constants/config';
+import { TYPE } from '@/lib/constants/design-tokens';
+import type { BreadcrumbItem } from '@/lib/seo/json-ld/breadcrumb-list';
+import type { PaginationView } from '@/lib/pagination';
+
+type ListCardItem = {
+  readonly title: string;
+  readonly subtitle: string;
+  readonly href: string;
+};
+
+interface Props {
+  heading: string;
+  items: readonly ListCardItem[];
+  emptyText: string;
+  emptyVariant?: 'muted' | 'error' | undefined;
+  crumbItems?: readonly BreadcrumbItem[] | undefined;
+  pagination?: PaginationView | undefined;
+  contentGap?: string | undefined;
+}
+
+const {
+  heading,
+  items,
+  emptyText,
+  emptyVariant = 'muted',
+  crumbItems,
+  pagination,
+  contentGap = 'gap-6 xs:gap-8 sm:gap-14',
+} = Astro.props;
+
+const showPagination = pagination !== undefined && pagination.totalPages > 1;
+const retryHref = `${Astro.url.pathname}${Astro.url.search}`;
+---
+
+<section class="relative my-14 flex w-full flex-col items-center justify-center xs:my-20 lg:my-28">
+  <div class:list={['flex w-full flex-col items-start justify-start', contentGap]}>
+    {crumbItems && <Breadcrumbs items={crumbItems} />}
+    {
+      Astro.slots.has('header') ? (
+        <slot name="header" />
+      ) : (
+        <h1 class={`${TYPE.title} text-text`}>{heading}</h1>
+      )
+    }
+    <slot />
+    <div class="w-full columns-1 gap-x-12 sm:columns-2">
+      {
+        items.length > 0 ? (
+          items.map((item) => (
+            <ListCard title={item.title} subtitle={item.subtitle} href={item.href} />
+          ))
+        ) : emptyVariant === 'error' ? (
+          <div class="col-span-full flex flex-col items-center gap-3 rounded-lg border border-danger bg-surface-raised px-4 py-8 text-center">
+            <p class="text-danger">{emptyText}</p>
+            <p class="text-sm text-danger">
+              {ERROR_TEXTS.supportPrefix}{' '}
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                dir="ltr"
+                class="rounded-sm text-danger underline underline-offset-2 focus-ring"
+              >
+                {SUPPORT_EMAIL}
+              </a>
+            </p>
+            <a
+              href={retryHref}
+              class="mt-1 rounded-md border border-danger px-4 py-1.5 text-sm text-danger focus-ring transition-colors hover:bg-surface-hover"
+            >
+              {ERROR_TEXTS.retry}
+            </a>
+          </div>
+        ) : (
+          <p class="text-center text-text-subtle">{emptyText}</p>
+        )
+      }
+    </div>
+    {showPagination && pagination && <Pagination {...pagination} />}
+  </div>
+</section>

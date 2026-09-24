@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/raaqimorg/qafiyah/blob/main/.github/SECURITY.md
+    about: Do not open a public issue. Follow the disclosure process here.
+  - name: Database dump passphrase
+    url: mailto:dumps@qafiyah.com
+    about: Request a passphrase for an encrypted snapshot in data/db.
+  - name: Avatar snapshot passphrase
+    url: mailto:avatars@qafiyah.com
+    about: Request a passphrase for an encrypted snapshot in data/avatars.

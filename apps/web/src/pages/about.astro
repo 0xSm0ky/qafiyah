@@ -1,0 +1,70 @@
+---
+import Layout from '@/layouts/layout.astro';
+import { INLINE_LINK, TYPE } from '@/lib/constants/design-tokens';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { organizationNode } from '@/lib/seo/json-ld/organization';
+import { withBrand } from '@/lib/seo/meta-text';
+import { avatarsUrl, dbDumpsUrl, githubUrl, raaqimUrl, telegramUrl, xProfileUrl } from '@/lib/urls';
+import { CONTACT_EMAIL } from '@qafiyah/config';
+
+const TITLE = withBrand('من نحن');
+const DESCRIPTION =
+  'نبذة عن قافية، مرجع رقمي مفتوح المصدر للشعر العربي، يهدف إلى جمعه وأرشفته وإتاحته للباحثين ومحبي الشعر، وهو أحد مشاريع مؤسسة راقم.';
+
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+const jsonLd = organizationNode();
+---
+
+<Layout title={TITLE} description={DESCRIPTION} canonical="/about" jsonLd={jsonLd}>
+  <div
+    class="mx-auto flex w-full max-w-3xl flex-col gap-4 py-16 md:h-full md:justify-center md:py-0"
+    dir="rtl"
+  >
+    <h1 class={`${TYPE.heading} text-text`}>من نحن</h1>
+
+    <p class={`${TYPE.body} text-text-muted leading-[1.8]`}>
+      قافية مشروع عربي مفتوح المصدر، يهدف إلى خدمة اللغة العربية وإتاحة تراثها الشعري للجميع، خدمةً
+      للباحثين ومحبّي الشعر العربي. ونحرص على أن تكون التجربة بجودة عالية: بحثٌ دقيق، وواجهةٌ سهلة،
+      ونصوصٌ موثوقة نعمل باستمرار على تدقيقها وتحسينها.
+    </p>
+
+    <p class={`${TYPE.body} text-text-muted leading-[1.8]`}>
+      تملك قافيةَ وتُشرف عليها مؤسسة{' '}
+      <a href={raaqimUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}> راقم </a>
+      ، وهي مؤسسة عربية مفتوحة المصدر تحتضن عدة مشاريع، قافية أحدها.
+    </p>
+
+    <p class={`${TYPE.body} text-text-muted leading-[1.8]`}>
+      كود قافية مفتوح ومنظّم وموثّق على{' '}
+      <a href={githubUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}> قتهب </a>
+      . و<a href={dbDumpsUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}>
+        قاعدة البيانات
+      </a>{' '}
+      و<a href="/developers" class={INLINE_LINK}> واجهة البرمجة </a>{' '}
+      و<a href={avatarsUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}>
+        صور الشعراء
+      </a>{' '}
+      التي نعرضها متاحة كلها للجميع، فلا حاجة إلى كشط الموقع. وإن كنتم مطوّرين تبحثون عن مشروع مفتوح المصدر
+      تتعلّمون منه أو تساهمون فيه، فقافية نقطة انطلاق جيدة، ونرحّب بمساهمة أي شخص.
+    </p>
+
+    <p class={`${TYPE.body} text-text-muted leading-[1.8]`}>
+      ننشر على حسابنا في{' '}
+      <a href={xProfileUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}>
+        تويتر
+      </a>{' '}
+      قصيدة كل يوم.
+    </p>
+
+    <p class={`${TYPE.body} text-text-muted leading-[1.8]`}>
+      نرحّب بأفكاركم ودعمكم. وإن كان لديكم محتوى تعتقدون أنّ حقوقه محفوظة لكم وتودّون إزالته،
+      فراسلونا على{' '}
+      <a href={`mailto:${CONTACT_EMAIL}`} class={INLINE_LINK}> البريد </a>{' '}
+      أو عبر{' '}
+      <a href={telegramUrl()} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}>
+        تلقرام
+      </a>
+      ، وسنحلّ الأمر في أقرب وقت ممكن.
+    </p>
+  </div>
+</Layout>

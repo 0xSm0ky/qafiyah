@@ -1,0 +1,946 @@
+{
+  "poems": [
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "content": {
+              "matched_fields": [
+                "content",
+                "content.stemmed"
+              ]
+            }
+          },
+          "number_of_fragments": 0,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [
+              {
+                "bool": {
+                  "minimum_should_match": 1,
+                  "should": [
+                    {
+                      "match": {
+                        "title.stemmed": {
+                          "minimum_should_match": "1<75%",
+                          "query": "حب"
+                        }
+                      }
+                    },
+                    {
+                      "match": {
+                        "content.stemmed": {
+                          "minimum_should_match": "1<75%",
+                          "query": "حب"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "should": [
+              {
+                "term": {
+                  "title.exact": {
+                    "boost": 131072,
+                    "value": "حب"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": {
+                    "boost": 16384,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "title.stemmed": {
+                    "boost": 2048,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title": {
+                    "boost": 256,
+                    "operator": "and",
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title.stemmed": {
+                    "boost": 32,
+                    "operator": "and",
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title.stemmed": {
+                    "boost": 4,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "content": {
+                    "boost": 4096,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "content.stemmed": {
+                    "boost": 512,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content": {
+                    "boost": 64,
+                    "operator": "and",
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content.stemmed": {
+                    "boost": 8,
+                    "operator": "and",
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content.stemmed": {
+                    "boost": 1,
+                    "query": "حب"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "text query, default ranking",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [],
+        "meterSlugs": [],
+        "page": 1,
+        "poetSlugs": [],
+        "q": "حب",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "sort": [
+          {
+            "id": "desc"
+          }
+        ],
+        "track_total_hits": 10000
+      },
+      "note": "browse, no text",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [],
+        "meterSlugs": [],
+        "page": 1,
+        "poetSlugs": [],
+        "q": "",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    },
+    {
+      "body": {
+        "from": 60,
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "sort": [
+          {
+            "id": "desc"
+          }
+        ],
+        "track_total_hits": 10000
+      },
+      "note": "browse, later page",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [],
+        "meterSlugs": [],
+        "page": 4,
+        "poetSlugs": [],
+        "q": "",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "content": {
+              "matched_fields": [
+                "content",
+                "content.stemmed"
+              ]
+            }
+          },
+          "number_of_fragments": 0,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_phrase": {
+                  "content": {
+                    "query": "يا رب"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "exact phrase",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [],
+        "exact": true,
+        "meterSlugs": [],
+        "page": 1,
+        "poetSlugs": [],
+        "q": "يا رب",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    },
+    {
+      "body": {
+        "from": 20,
+        "highlight": {
+          "fields": {
+            "content": {
+              "matched_fields": [
+                "content",
+                "content.stemmed"
+              ]
+            }
+          },
+          "number_of_fragments": 0,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [
+              {
+                "bool": {
+                  "minimum_should_match": 1,
+                  "should": [
+                    {
+                      "match": {
+                        "title.stemmed": {
+                          "minimum_should_match": "1<75%",
+                          "query": "دمع"
+                        }
+                      }
+                    },
+                    {
+                      "match": {
+                        "content.stemmed": {
+                          "minimum_should_match": "1<75%",
+                          "query": "دمع"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "eraSlug": [
+                    "jahili"
+                  ]
+                }
+              }
+            ],
+            "should": [
+              {
+                "term": {
+                  "title.exact": {
+                    "boost": 131072,
+                    "value": "دمع"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": {
+                    "boost": 16384,
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "title.stemmed": {
+                    "boost": 2048,
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title": {
+                    "boost": 256,
+                    "operator": "and",
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title.stemmed": {
+                    "boost": 32,
+                    "operator": "and",
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "title.stemmed": {
+                    "boost": 4,
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "content": {
+                    "boost": 4096,
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "content.stemmed": {
+                    "boost": 512,
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content": {
+                    "boost": 64,
+                    "operator": "and",
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content.stemmed": {
+                    "boost": 8,
+                    "operator": "and",
+                    "query": "دمع"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "content.stemmed": {
+                    "boost": 1,
+                    "query": "دمع"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "text plus one filter",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [
+          "jahili"
+        ],
+        "meterSlugs": [],
+        "page": 2,
+        "poetSlugs": [],
+        "q": "دمع",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "query": {
+          "bool": {
+            "filter": [
+              {
+                "terms": {
+                  "poetSlug": [
+                    "yoFB"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "eraSlug": [
+                    "abbasi",
+                    "jahili"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "meterSlug": [
+                    "altawil"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "themeSlug": [
+                    "alnasib"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "rhymeSlug": [
+                    "meem"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "collectionSlug": [
+                    "almuallaqat"
+                  ]
+                }
+              }
+            ],
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "sort": [
+          {
+            "id": "desc"
+          }
+        ],
+        "track_total_hits": 10000
+      },
+      "note": "every filter at once, no text",
+      "params": {
+        "collectionSlugs": [
+          "almuallaqat"
+        ],
+        "eraSlugs": [
+          "abbasi",
+          "jahili"
+        ],
+        "meterSlugs": [
+          "altawil"
+        ],
+        "page": 1,
+        "poetSlugs": [
+          "yoFB"
+        ],
+        "q": "",
+        "rhymeSlugs": [
+          "meem"
+        ],
+        "themeSlugs": [
+          "alnasib"
+        ]
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "content": {
+              "matched_fields": [
+                "content",
+                "content.stemmed"
+              ]
+            }
+          },
+          "number_of_fragments": 0,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [
+              {
+                "terms": {
+                  "meterSlug": [
+                    "alkamil"
+                  ]
+                }
+              }
+            ],
+            "must": [
+              {
+                "match_phrase": {
+                  "content": {
+                    "query": "صبر"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "exact with a filter",
+      "params": {
+        "collectionSlugs": [],
+        "eraSlugs": [],
+        "exact": true,
+        "meterSlugs": [
+          "alkamil"
+        ],
+        "page": 1,
+        "poetSlugs": [],
+        "q": "صبر",
+        "rhymeSlugs": [],
+        "themeSlugs": []
+      }
+    }
+  ],
+  "poets": [
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "name": {
+              "matched_fields": [
+                "name",
+                "name.autocomplete"
+              ]
+            }
+          },
+          "fragment_size": 200,
+          "number_of_fragments": 1,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [],
+            "minimum_should_match": 1,
+            "should": [
+              {
+                "term": {
+                  "name.exact": {
+                    "boost": 12,
+                    "value": "أحمد"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "name": {
+                    "boost": 6,
+                    "query": "أحمد"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.autocomplete": {
+                    "boost": 2,
+                    "query": "أحمد"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.stemmed": {
+                    "boost": 3,
+                    "query": "أحمد"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name": {
+                    "boost": 1,
+                    "fuzziness": "AUTO",
+                    "query": "أحمد"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "text query, default ranking",
+      "params": {
+        "eraSlugs": [],
+        "page": 1,
+        "q": "أحمد"
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "name": {
+              "matched_fields": [
+                "name",
+                "name.autocomplete"
+              ]
+            }
+          },
+          "fragment_size": 200,
+          "number_of_fragments": 1,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "sort": [
+          {
+            "id": "desc"
+          }
+        ],
+        "track_total_hits": 10000
+      },
+      "note": "browse by id, no text",
+      "params": {
+        "eraSlugs": [],
+        "page": 1,
+        "q": ""
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "size": 30,
+        "sort": [
+          {
+            "poemsCount": "desc"
+          },
+          {
+            "nameSort": "asc"
+          },
+          {
+            "id": "asc"
+          }
+        ],
+        "track_total_hits": 50000
+      },
+      "note": "the /poets list: sorted by poem count, no highlight, poem page size",
+      "params": {
+        "eraSlugs": [],
+        "highlight": false,
+        "page": 1,
+        "pageSize": 30,
+        "q": "",
+        "sort": "poemsCount",
+        "window": 50000
+      }
+    },
+    {
+      "body": {
+        "from": 60,
+        "query": {
+          "bool": {
+            "filter": [
+              {
+                "terms": {
+                  "eraSlug": [
+                    "abbasi"
+                  ]
+                }
+              }
+            ],
+            "minimum_should_match": 1,
+            "should": [
+              {
+                "term": {
+                  "name.exact": {
+                    "boost": 12,
+                    "value": "المتنبي"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "name": {
+                    "boost": 6,
+                    "query": "المتنبي"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.autocomplete": {
+                    "boost": 2,
+                    "query": "المتنبي"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.stemmed": {
+                    "boost": 3,
+                    "query": "المتنبي"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name": {
+                    "boost": 1,
+                    "fuzziness": "AUTO",
+                    "query": "المتنبي"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 30,
+        "track_total_hits": 50000
+      },
+      "note": "the /poets list with a query and an era",
+      "params": {
+        "eraSlugs": [
+          "abbasi"
+        ],
+        "highlight": false,
+        "page": 3,
+        "pageSize": 30,
+        "q": "المتنبي",
+        "sort": "poemsCount",
+        "window": 50000
+      }
+    },
+    {
+      "body": {
+        "from": 0,
+        "highlight": {
+          "fields": {
+            "name": {
+              "matched_fields": [
+                "name",
+                "name.autocomplete"
+              ]
+            }
+          },
+          "fragment_size": 200,
+          "number_of_fragments": 1,
+          "post_tags": [
+            "</mark>"
+          ],
+          "pre_tags": [
+            "<mark>"
+          ]
+        },
+        "query": {
+          "bool": {
+            "filter": [],
+            "must": [
+              {
+                "match_phrase": {
+                  "name": {
+                    "query": "المتنبي"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "exact name",
+      "params": {
+        "eraSlugs": [],
+        "exact": true,
+        "page": 1,
+        "q": "المتنبي"
+      }
+    },
+    {
+      "body": {
+        "from": 20,
+        "query": {
+          "bool": {
+            "filter": [],
+            "minimum_should_match": 1,
+            "should": [
+              {
+                "term": {
+                  "name.exact": {
+                    "boost": 12,
+                    "value": "حب"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "name": {
+                    "boost": 6,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.autocomplete": {
+                    "boost": 2,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name.stemmed": {
+                    "boost": 3,
+                    "query": "حب"
+                  }
+                }
+              },
+              {
+                "match": {
+                  "name": {
+                    "boost": 1,
+                    "fuzziness": "AUTO",
+                    "query": "حب"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "size": 20,
+        "track_total_hits": 10000
+      },
+      "note": "search section, no highlight",
+      "params": {
+        "eraSlugs": [],
+        "highlight": false,
+        "page": 2,
+        "q": "حب"
+      }
+    }
+  ]
+}

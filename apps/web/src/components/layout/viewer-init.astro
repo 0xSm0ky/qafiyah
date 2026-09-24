@@ -1,0 +1,30 @@
+---
+import { VIEWER_HINT_COOKIE, VIEWER_STORAGE_KEY } from '@/lib/constants/config';
+---
+
+<script
+  is:inline
+  data-cfasync="false"
+  define:vars={{ hintCookie: VIEWER_HINT_COOKIE, viewerKey: VIEWER_STORAGE_KEY }}
+>
+  if (document.cookie.split('; ').includes(`${hintCookie}=1`)) {
+    const root = document.documentElement;
+    root.dataset.viewer = 'loading';
+    try {
+      const cached = JSON.parse(localStorage.getItem(viewerKey) ?? 'null');
+      const avatar = cached?.avatarData;
+      const hasAvatar =
+        typeof avatar === 'string' && /^data:image\/[a-z]+;base64,[A-Za-z0-9+/=]+$/.test(avatar);
+      if (hasAvatar) root.style.setProperty('--viewer-avatar', `url("${avatar}")`);
+      else if (typeof cached?.displayName === 'string') {
+        root.style.setProperty(
+          '--viewer-initial',
+          JSON.stringify(cached.displayName.trim().charAt(0).toUpperCase())
+        );
+      }
+      const ready =
+        hasAvatar || cached?.avatarUrl === null || typeof cached?.avatarFailedAt === 'number';
+      if (cached && ready) root.dataset.viewer = 'signed-in';
+    } catch {}
+  }
+</script>

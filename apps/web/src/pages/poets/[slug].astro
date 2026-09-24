@@ -1,0 +1,116 @@
+---
+import type { PoetSlug } from '@/lib/api/brands';
+import ListPageBody from '@/components/list-page-body.astro';
+import Layout from '@/layouts/layout.astro';
+import { TYPE } from '@/lib/constants/design-tokens';
+import { buildPoetLayout } from '@/lib/seo/poets-page';
+import { parsePageQuery } from '@/lib/pagination';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { listPoems } from '@/lib/server/poems';
+import { getPoet } from '@/lib/server/poets';
+import { poetUrl } from '@/lib/urls';
+import { CDN_URL } from '@qafiyah/config';
+
+const page = parsePageQuery(Astro.url.searchParams.get('page'));
+const { slug: slugParam } = Astro.params;
+const poetSlug = slugParam as PoetSlug | undefined;
+const [poet, list] =
+  page === null || !poetSlug
+    ? [null, null]
+    : await Promise.all([getPoet(poetSlug), listPoems({ poetSlugs: [poetSlug] }, page)]);
+if (!(poet && list)) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+const { poems, pagination } = list;
+const slug = poet.slug;
+const pageNumber = pagination.page;
+
+const BIO_CLASS = `${TYPE.body} text-text-muted leading-[1.8]`;
+const BIO_TOGGLE_ID = 'poet-bio-toggle';
+const ELLIPSIS_CLASS = "after:content-['…'] peer-checked:after:content-none";
+const TOGGLE_CLASS =
+  'text-text cursor-pointer underline underline-offset-4 transition-colors hover:text-text-muted peer-focus-visible:ring-1 peer-focus-visible:ring-text';
+
+const {
+  title,
+  description,
+  heading,
+  subtitle,
+  avatarUrl,
+  socialImage,
+  twitterImage,
+  bio,
+  pag,
+  personJsonLd,
+  worksJsonLd,
+  crumbItems,
+  crumbsJsonLd,
+  items,
+} = buildPoetLayout({ poet, poems, pagination });
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={poetUrl(slug, pageNumber)}
+  prevUrl={pag.hasPrevPage ? pag.prevPageUrl : undefined}
+  nextUrl={pag.hasNextPage ? pag.nextPageUrl : undefined}
+  ogType="profile"
+  ogTitle={title}
+  ogDescription={description}
+  socialImage={socialImage}
+  twitterImage={twitterImage}
+  twitterCard="summary"
+  twitterTitle={title}
+  twitterDescription={description}
+  preconnect={avatarUrl ? [CDN_URL] : []}
+  jsonLd={[personJsonLd, worksJsonLd, crumbsJsonLd]}
+>
+  <ListPageBody
+    heading={heading}
+    crumbItems={crumbItems}
+    items={items}
+    emptyText="لا توجد قصائد لهذا الشاعر."
+    pagination={pag}
+  >
+    <div slot="header" class="flex w-full items-center gap-4 xs:gap-5">
+      {
+        avatarUrl && (
+          <div class="relative size-24 shrink-0">
+            <div class="absolute inset-0 animate-pulse rounded-lg bg-surface-sunken" />
+            <img
+              src={avatarUrl}
+              alt={heading}
+              width="96"
+              height="96"
+              decoding="async"
+              fetchpriority="high"
+              class="absolute inset-0 size-24 rounded-lg object-cover object-top"
+            />
+          </div>
+        )
+      }
+      <div class="flex min-w-0 flex-col gap-2">
+        <h1 class={`${TYPE.title} text-text`}>{heading}</h1>
+        <p class={`${TYPE.caption} text-text-subtle`}>{subtitle}</p>
+      </div>
+    </div>
+    <div class="flex w-full max-w-3xl flex-col gap-3">
+      {bio?.kind === 'full' && <p class={BIO_CLASS}>{bio.text}</p>}
+      {
+        bio?.kind === 'truncated' && (
+          <p class={BIO_CLASS}>
+            <input id={BIO_TOGGLE_ID} type="checkbox" class="peer sr-only" />
+            <span class={ELLIPSIS_CLASS}>{bio.head}</span>
+            <span class="hidden peer-checked:inline">{bio.rest}</span>{' '}
+            <label for={BIO_TOGGLE_ID} class={`${TOGGLE_CLASS} peer-checked:hidden`}>
+              عرض المزيد
+            </label>
+            <label for={BIO_TOGGLE_ID} class={`${TOGGLE_CLASS} hidden peer-checked:inline`}>
+              طي
+            </label>
+          </p>
+        )
+      }
+    </div>
+  </ListPageBody>
+</Layout>

@@ -1,0 +1,165 @@
+---
+import { sanitizeArabicInput } from '@/lib/arabic';
+import { MAX_QUERY_LENGTH } from '@qafiyah/config';
+
+import type { EraSlug } from '@/lib/api/brands';
+import ListPageBody from '@/components/list-page-body.astro';
+import Icon from '@/components/ui/icon.astro';
+import { SEARCH_TEXTS } from '@/lib/constants/copy';
+import Layout from '@/layouts/layout.astro';
+import { buildPoetsIndexView } from '@/lib/seo/poets-page';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { getPoetsPage } from '@/lib/server/poets';
+import { allEras } from '@/lib/server/taxonomies';
+import { parsePageQuery } from '@/lib/pagination';
+import { poetsUrl } from '@/lib/urls';
+
+const page = parsePageQuery(Astro.url.searchParams.get('page'));
+if (page === null) return Astro.rewrite('/404');
+
+const rawEra = (Astro.url.searchParams.get('era') ?? '').trim();
+const rawQuery = sanitizeArabicInput(Astro.url.searchParams.get('q') ?? '')
+  .trim()
+  .slice(0, MAX_QUERY_LENGTH);
+const queryFilter = rawQuery || undefined;
+
+const [eras, data] = await Promise.all([
+  allEras(),
+  getPoetsPage(page, { era: (rawEra || undefined) as EraSlug | undefined, q: queryFilter }),
+]);
+const activeEra = rawEra ? eras.find((era) => era.slug === rawEra) : undefined;
+if (rawEra && !activeEra) return Astro.rewrite('/404');
+if (!data) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+
+const { poets, pagination } = data;
+const pageNumber = pagination.page;
+const eraParam = rawEra || undefined;
+
+const {
+  title,
+  description,
+  isFiltered,
+  pag,
+  collectionJsonLd,
+  crumbItems,
+  crumbsJsonLd,
+  heading,
+  emptyText,
+  items,
+} = buildPoetsIndexView({ poets, pagination, activeEra, queryFilter, eraParam });
+
+const chipBase =
+  'focus-ring shrink-0 whitespace-nowrap rounded-md border px-4 py-2.5 text-base md:px-6 md:text-lg transition-colors duration-200 hover:cursor-pointer';
+const chipActive = 'border-transparent bg-accent text-surface';
+const chipIdle = 'border-border bg-transparent text-text-muted hover:bg-surface-hover';
+
+const chips = [
+  { label: 'الكل', href: poetsUrl({ q: queryFilter }), isActive: !activeEra },
+  ...eras.map((era) => ({
+    label: era.name,
+    href: poetsUrl({ era: era.slug, q: queryFilter }),
+    isActive: era.slug === activeEra?.slug,
+  })),
+];
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={poetsUrl({ page: pageNumber, era: eraParam, q: queryFilter })}
+  robotsIndex={!isFiltered}
+  prevUrl={pag.hasPrevPage ? pag.prevPageUrl : undefined}
+  nextUrl={pag.hasNextPage ? pag.nextPageUrl : undefined}
+  jsonLd={pageNumber > 1 ? [collectionJsonLd, crumbsJsonLd] : [collectionJsonLd]}
+>
+  <ListPageBody
+    heading={heading}
+    crumbItems={pageNumber > 1 ? crumbItems : undefined}
+    items={items}
+    emptyText={emptyText}
+    pagination={pag}
+    contentGap="gap-6 xs:gap-8 sm:gap-10"
+  >
+    <form
+      method="GET"
+      action="/poets"
+      role="search"
+      class="flex w-full flex-col gap-6 xs:gap-8 sm:gap-10"
+    >
+      {activeEra && <input type="hidden" name="era" value={activeEra.slug} />}
+      <div class="w-full">
+        <div class="mb-1 flex h-4 items-center">
+          <p
+            id="poets-search-error"
+            role="alert"
+            hidden
+            class="text-right text-xs text-danger md:text-base"
+          >
+            {SEARCH_TEXTS.arabicOnlyError}
+          </p>
+        </div>
+        <div class="relative w-full">
+          <input
+            type="search"
+            name="q"
+            value={queryFilter ?? ''}
+            maxlength={MAX_QUERY_LENGTH}
+            placeholder="ابحث عن شاعر بالاسم"
+            dir="rtl"
+            class="h-12 w-full rounded-none border-0 border-b border-border bg-transparent pr-3 pl-12 text-right text-base text-text shadow-none transition-colors outline-none placeholder:text-text-subtle focus-visible:border-text md:text-lg"
+          />
+          {
+            queryFilter && (
+              <a
+                href={poetsUrl({ era: eraParam })}
+                aria-label="مسح البحث"
+                class="absolute top-1/2 left-1 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-lg text-text-subtle focus-ring transition-colors hover:text-text"
+              >
+                <Icon name="circle-x" class="h-5 w-5" />
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <div
+        class="-mx-1 flex w-[calc(100%+0.5rem)] scrollbar-none gap-2 overflow-x-auto px-1 py-1 sm:mx-0 sm:w-full sm:flex-wrap sm:overflow-x-visible sm:px-0"
+      >
+        {
+          chips.map((chip) => (
+            <a
+              href={chip.href}
+              aria-current={chip.isActive ? 'page' : undefined}
+              class:list={[chipBase, chip.isActive ? chipActive : chipIdle]}
+            >
+              {chip.label}
+            </a>
+          ))
+        }
+      </div>
+    </form>
+  </ListPageBody>
+</Layout>
+
+<style>
+  input[type='search']::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+</style>
+
+<script>
+  import { sanitizeArabicInput, stripInputNoise } from '@/lib/arabic';
+
+  const input = document.querySelector('form[role="search"] input[name="q"]');
+  const error = document.querySelector('#poets-search-error');
+  if (input instanceof HTMLInputElement && error instanceof HTMLElement) {
+    input.addEventListener('input', () => {
+      const raw = input.value;
+      const cleaned = sanitizeArabicInput(raw);
+      if (cleaned !== raw) input.value = cleaned;
+      error.hidden = stripInputNoise(raw) === cleaned;
+    });
+  }
+</script>

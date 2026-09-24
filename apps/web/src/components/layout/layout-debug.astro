@@ -1,0 +1,301 @@
+<script is:inline type="module" data-cfasync="false">
+  const STORAGE_KEY = 'qafiyah-layout-debug';
+  const SKIPPED = new Set([
+    'SCRIPT',
+    'STYLE',
+    'BR',
+    'svg',
+    'path',
+    'circle',
+    'line',
+    'polyline',
+    'polygon',
+    'rect',
+    'g',
+    'defs',
+    'use',
+    'NOSCRIPT',
+    'TEMPLATE',
+    'ASTRO-SLOT',
+  ]);
+  const WRAPPERS = new Set([
+    'DIV',
+    'SECTION',
+    'MAIN',
+    'NAV',
+    'HEADER',
+    'FOOTER',
+    'ARTICLE',
+    'ASIDE',
+    'UL',
+    'OL',
+    'LI',
+    'FORM',
+    'DL',
+    'FIGURE',
+    'TABLE',
+    'DIALOG',
+  ]);
+
+  const param = new URLSearchParams(location.search).get('debug');
+  try {
+    if (param === 'layout') localStorage.setItem(STORAGE_KEY, '1');
+    if (param === 'off') localStorage.removeItem(STORAGE_KEY);
+  } catch {}
+
+  let enabled = false;
+  try {
+    enabled = localStorage.getItem(STORAGE_KEY) === '1';
+  } catch {}
+
+  let layer;
+  let elements = [];
+  let frame = 0;
+  let observer;
+  let button;
+
+  const paintButton = () => {
+    if (!button) return;
+    button.setAttribute('aria-pressed', String(enabled));
+    button.style.opacity = enabled ? '1' : '0.35';
+    button.style.background = enabled ? 'hsl(330 90% 60%)' : 'rgba(127,127,127,0.35)';
+  };
+
+  const observe = () =>
+    observer?.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'hidden'],
+    });
+
+  const isWrapper = (el) => {
+    if (
+      SKIPPED.has(el.tagName) ||
+      el.closest(
+        '#qaf-layout-debug, #qaf-layout-debug-toggle, #qaf-grid-debug, #qaf-grid-debug-toggle'
+      )
+    )
+      return false;
+    if (WRAPPERS.has(el.tagName)) return true;
+    return el.children.length > 0 && getComputedStyle(el).display !== 'inline';
+  };
+
+  const describe = (el) => {
+    const id = el.id ? `#${el.id}` : '';
+    const classes =
+      typeof el.className === 'string'
+        ? el.className.trim().split(/\s+/).slice(0, 6).join(' ')
+        : '';
+    return `${el.tagName.toLowerCase()}${id}${classes ? ` .${classes}` : ''}`;
+  };
+
+  const draw = () => {
+    frame = 0;
+    observer?.disconnect();
+    layer?.remove();
+    layer = undefined;
+    elements = [];
+    if (!enabled) {
+      observe();
+      return;
+    }
+
+    layer = document.createElement('div');
+    layer.id = 'qaf-layout-debug';
+    layer.style.cssText =
+      'position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;z-index:2147483647';
+
+    const origin = document.body.getBoundingClientRect();
+    for (const el of document.body.querySelectorAll('*')) {
+      if (!isWrapper(el)) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 2 || rect.height < 2) continue;
+
+      elements.push(el);
+      const label = `D${elements.length}`;
+      const hue = Math.round((elements.length * 137.508) % 360);
+      const color = `hsl(${hue} 90% 60%)`;
+
+      const box = document.createElement('div');
+      box.style.cssText = `position:absolute;box-sizing:border-box;left:${rect.left - origin.left}px;top:${rect.top - origin.top}px;width:${rect.width}px;height:${rect.height}px;outline:1px solid ${color};outline-offset:-1px;background:hsl(${hue} 90% 60% / 0.06)`;
+
+      const tag = document.createElement('span');
+      tag.textContent = label;
+      tag.title = describe(el);
+      tag.style.cssText = `position:absolute;top:0;right:0;font:600 9px/1.3 ui-monospace,monospace;padding:0 3px;background:${color};color:#000;direction:ltr`;
+
+      box.append(tag);
+      layer.append(box);
+    }
+
+    document.body.append(layer);
+    observe();
+  };
+
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(draw);
+  };
+
+  const toggle = () => {
+    enabled = !enabled;
+    try {
+      if (enabled) localStorage.setItem(STORAGE_KEY, '1');
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+    paintButton();
+    schedule();
+  };
+
+  const mountButton = () => {
+    button = document.createElement('button');
+    button.id = 'qaf-layout-debug-toggle';
+    button.type = 'button';
+    button.title = 'Layout debug (Alt+Shift+D)';
+    button.setAttribute('aria-label', 'Toggle layout debug');
+    button.style.cssText =
+      'position:fixed;right:6px;bottom:6px;z-index:2147483647;width:18px;height:18px;padding:0;border:0;border-radius:9999px;display:grid;place-items:center;cursor:pointer;color:#fff;transition:opacity .15s';
+    button.innerHTML =
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/></svg>';
+    button.addEventListener('mouseenter', () => {
+      button.style.opacity = '1';
+    });
+    button.addEventListener('mouseleave', paintButton);
+    button.addEventListener('click', toggle);
+    document.body.append(button);
+    paintButton();
+  };
+
+  const GRID_KEY = 'qafiyah-grid-debug';
+  const GRID_COLUMNS = 12;
+  const GRID_GUTTER = 24;
+  let gridEnabled = false;
+  try {
+    gridEnabled = localStorage.getItem(GRID_KEY) === '1';
+  } catch {}
+  let grid;
+  let gridButton;
+
+  const paintGridButton = () => {
+    if (!gridButton) return;
+    gridButton.setAttribute('aria-pressed', String(gridEnabled));
+    gridButton.style.opacity = gridEnabled ? '1' : '0.35';
+    gridButton.style.background = gridEnabled ? 'hsl(200 90% 50%)' : 'rgba(127,127,127,0.35)';
+  };
+
+  const shade = (from, to, color) => {
+    const band = document.createElement('div');
+    band.style.cssText = `position:absolute;top:0;bottom:0;left:${from}px;width:${Math.max(0, to - from)}px;background:${color}`;
+    return band;
+  };
+
+  const drawGrid = () => {
+    grid?.remove();
+    grid = undefined;
+    if (!gridEnabled) return;
+
+    const body = document.body.getBoundingClientRect();
+    const style = getComputedStyle(document.body);
+    const left = body.left + Number.parseFloat(style.paddingLeft);
+    const width =
+      body.width - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+    const viewportCenter = document.documentElement.clientWidth / 2;
+
+    grid = document.createElement('div');
+    grid.id = 'qaf-grid-debug';
+    grid.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483646';
+
+    const columns = document.createElement('div');
+    columns.style.cssText = `position:absolute;top:0;bottom:0;left:${left}px;width:${width}px;display:grid;grid-template-columns:repeat(${GRID_COLUMNS},1fr);column-gap:${GRID_GUTTER}px`;
+    for (let i = 0; i < GRID_COLUMNS; i++) {
+      const column = document.createElement('div');
+      column.style.cssText =
+        'background:hsl(200 90% 55% / 0.08);border-inline:1px solid hsl(200 90% 55% / 0.35)';
+      columns.append(column);
+    }
+
+    const contentCenter = document.createElement('div');
+    contentCenter.style.cssText = `position:absolute;top:0;bottom:0;left:${left + width / 2}px;width:1px;background:hsl(200 90% 55% / 0.9)`;
+
+    const windowCenter = document.createElement('div');
+    windowCenter.style.cssText = `position:absolute;top:0;bottom:0;left:${viewportCenter}px;width:0;border-left:1px dashed hsl(330 90% 60% / 0.9)`;
+
+    const viewportWidth = document.documentElement.clientWidth;
+    const padding = 'hsl(35 95% 55% / 0.14)';
+    const outside = 'hsl(0 0% 50% / 0.14)';
+
+    grid.append(
+      shade(0, body.left, outside),
+      shade(body.left, left, padding),
+      shade(left + width, body.right, padding),
+      shade(body.right, viewportWidth, outside),
+      columns,
+      contentCenter,
+      windowCenter
+    );
+    document.body.append(grid);
+  };
+
+  const toggleGrid = () => {
+    gridEnabled = !gridEnabled;
+    try {
+      if (gridEnabled) localStorage.setItem(GRID_KEY, '1');
+      else localStorage.removeItem(GRID_KEY);
+    } catch {}
+    paintGridButton();
+    drawGrid();
+  };
+
+  const mountGridButton = () => {
+    gridButton = document.createElement('button');
+    gridButton.id = 'qaf-grid-debug-toggle';
+    gridButton.type = 'button';
+    gridButton.title = '12 column grid';
+    gridButton.setAttribute('aria-label', 'Toggle 12 column grid');
+    gridButton.style.cssText =
+      'position:fixed;right:28px;bottom:6px;z-index:2147483647;width:18px;height:18px;padding:0;border:0;border-radius:9999px;display:grid;place-items:center;cursor:pointer;color:#fff;transition:opacity .15s';
+    gridButton.innerHTML =
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M4 3v18M9.3 3v18M14.7 3v18M20 3v18"/></svg>';
+    gridButton.addEventListener('mouseenter', () => {
+      gridButton.style.opacity = '1';
+    });
+    gridButton.addEventListener('mouseleave', paintGridButton);
+    gridButton.addEventListener('click', toggleGrid);
+    document.body.append(gridButton);
+    paintGridButton();
+  };
+
+  window.__qafDebug = {
+    toggle,
+    toggleGrid,
+    el: (label) => elements[Number(String(label).replaceAll(/\D/g, '')) - 1],
+    describe: (label) => {
+      const el = window.__qafDebug.el(label);
+      return el ? describe(el) : undefined;
+    },
+  };
+
+  const start = () => {
+    mountButton();
+    mountGridButton();
+    drawGrid();
+    addEventListener('resize', drawGrid);
+    observer = new MutationObserver((records) => {
+      if (records.some((record) => record.target !== button && record.target !== gridButton))
+        schedule();
+    });
+    observe();
+    addEventListener('resize', schedule);
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('keydown', (event) => {
+      if (event.altKey && event.shiftKey && event.code === 'KeyD') {
+        event.preventDefault();
+        toggle();
+      }
+    });
+    schedule();
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+</script>

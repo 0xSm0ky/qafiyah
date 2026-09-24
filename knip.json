@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreWorkspaces": ["packages/tsconfig"],
+  "ignoreBinaries": ["actionlint"],
+  "ignore": ["apps/web/src/lib/generated/openapi/schema.gen.ts"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/dev/worktree.ts", "scripts/**/*.test.ts"]
+    }
+  }
+}

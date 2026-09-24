@@ -1,0 +1,12 @@
+{
+  "extends": "@qafiyah/tsconfig/bun.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@qafiyah/config": ["../../config.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source ./scripts/lib/remote.sh
+
+echo "→ Deploying origin/main to ${REMOTE_HOST} (zero-downtime) ..."
+
+remote_exec ./scripts/lib/reclaimable.sh ./scripts/lib/tag-db-container.sh <<'REMOTE'
+set -euo pipefail
+cd "$REMOTE_DIR"
+
+rollout() {
+  svc="$1"
+  old=$(docker compose ps -q "$svc")
+  n_old=$(printf '%s\n' "$old" | grep -c .)
+  [ "$n_old" -ge 1 ] || { echo "✗ rollout $svc: nothing running"; exit 1; }
+  target=$((2 * n_old))
+  echo "→ rolling $svc ($n_old -> $target -> $n_old)"
+  docker compose up -d --no-deps --no-recreate --scale "$svc=$target" "$svc"
+  deadline=$((SECONDS + 150))
+  while :; do
+    ids=$(docker compose ps -q "$svc"); n=0; h=0
+    for id in $ids; do
+      n=$((n + 1))
+      s=$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null || echo none)
+      [ "$s" = healthy ] && h=$((h + 1))
+    done
+    [ "$n" -ge "$target" ] && [ "$h" -eq "$n" ] && break
+    [ "$SECONDS" -ge "$deadline" ] && { echo "✗ rollout $svc timeout ($h/$n healthy)"; docker compose logs --tail=40 "$svc"; exit 1; }
+    sleep 2
+  done
+  echo "  $svc: new replica(s) healthy → settling, then draining old"
+  sleep 7
+  docker stop $old >/dev/null && docker rm $old >/dev/null
+}
+
+git fetch --depth 1 origin main
+current=$(git rev-parse --short HEAD)
+target=$(git rev-parse --short FETCH_HEAD)
+echo "  current ${current}  ->  target ${target}"
+git reset --hard FETCH_HEAD
+./scripts/secrets/pull.sh prod
+
+export SENTRY_RELEASE="$target"
+
+docker compose build api web search-indexer
+
+docker compose up -d --no-deps db elasticsearch search-indexer edge-gateway
+tag_db_container "$(docker compose ps -q db)"
+
+rollout api
+rollout web
+
+echo ""
+echo "→ edge smoke test (through the edge gateway on 127.0.0.1:80)"
+curl -fsS -H 'Host: qafiyah.com'     http://127.0.0.1:80/healthz -o /dev/null && echo "  apex /healthz   ok"
+curl -fsS -H 'Host: api.qafiyah.com' http://127.0.0.1:80/healthz -o /dev/null && echo "  api  /healthz    ok"
+
+echo ""
+echo "=== prod status ==="
+docker compose ps
+echo ""
+echo "✓ deployed $(git rev-parse --short HEAD)"
+
+echo ""
+echo "→ capping build cache at 5GB (keeps recent layers for fast rebuilds)"
+docker builder prune -f --max-used-space 5GB 2>&1 | tail -1 || true
+
+print_reclaimable
+REMOTE

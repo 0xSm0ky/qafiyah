@@ -1,0 +1,51 @@
+---
+import { SITE_THEME_COLOR_DARK_HEX, SITE_THEME_COLOR_HEX } from '@/lib/constants/site-meta';
+import { THEME_STORAGE_KEY } from '@/lib/constants/config';
+import { SETTINGS_STORAGE_KEY } from '@/lib/settings/settings-schema';
+---
+
+<script
+  is:inline
+  data-cfasync="false"
+  define:vars={{
+    settingsKey: SETTINGS_STORAGE_KEY,
+    legacyKey: THEME_STORAGE_KEY,
+    lightColor: SITE_THEME_COLOR_HEX,
+    darkColor: SITE_THEME_COLOR_DARK_HEX,
+  }}
+>
+  const root = document.documentElement;
+  const query = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const readTheme = () => {
+    try {
+      const raw = localStorage.getItem(settingsKey);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            const theme = parsed.theme;
+            return theme === 'dark' || theme === 'light' || theme === 'system' ? theme : 'system';
+          }
+        } catch {}
+      }
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy === 'dark' || legacy === 'light') return legacy;
+    } catch {}
+    return 'system';
+  };
+
+  const apply = (theme) => {
+    const isDark = theme === 'dark' || (theme === 'system' && query.matches);
+    root.classList.toggle('dark', isDark);
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isDark ? darkColor : lightColor);
+  };
+
+  apply(readTheme());
+
+  query.addEventListener('change', () => {
+    if (readTheme() === 'system') apply('system');
+  });
+</script>

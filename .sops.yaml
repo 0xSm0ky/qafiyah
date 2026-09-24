@@ -1,0 +1,5 @@
+creation_rules:
+  - path_regex: secrets/prod\.enc\.env$
+    age: age18kq75dvpznhutf67cwnafznyagm77vvpcnfc57mmwpxxp4lf7ysskkrrpd
+  - path_regex: secrets/dev\.enc\.env$
+    age: age18kq75dvpznhutf67cwnafznyagm77vvpcnfc57mmwpxxp4lf7ysskkrrpd

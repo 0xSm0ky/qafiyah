@@ -1,0 +1,373 @@
+use std::time::Duration;
+
+use qafiyah_elasticsearch::Endpoint;
+use reqwest::{Method, StatusCode};
+use serde::Serialize;
+use serde_json::{Value, json};
+
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+
+pub(crate) struct Es {
+    endpoint: Endpoint,
+    timeout: Duration,
+}
+
+impl Es {
+    pub(crate) fn new(url: &str) -> Result<Self, String> {
+        Self::with_timeout(url, REQUEST_TIMEOUT)
+    }
+
+    fn with_timeout(url: &str, timeout: Duration) -> Result<Self, String> {
+        Ok(Self {
+            endpoint: Endpoint::new(url)?,
+            timeout,
+        })
+    }
+
+    fn request(&self, method: Method, path: &str) -> reqwest::RequestBuilder {
+        self.endpoint.request(method, path).timeout(self.timeout)
+    }
+
+    async fn send_json<T: Serialize>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&T>,
+    ) -> Result<(StatusCode, Value), String> {
+        let mut req = self.request(method, path);
+        if let Some(b) = body {
+            req = req.json(b);
+        }
+        let res = req.send().await.map_err(|e| format!("{path}: {e}"))?;
+        let status = res.status();
+        let value: Value = res.json().await.unwrap_or(Value::Null);
+        Ok((status, value))
+    }
+
+    async fn expect_ok<T: Serialize>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&T>,
+    ) -> Result<Value, String> {
+        let (status, value) = self.send_json(method, path, body).await?;
+        if !status.is_success() {
+            return Err(format!("{path}: {status}: {value}"));
+        }
+        Ok(value)
+    }
+
+    pub(crate) async fn ensure_read_only_user(
+        &self,
+        role: &str,
+        username: &str,
+        password: &str,
+        index_patterns: &[String],
+    ) -> Result<(), String> {
+        let role_body = json!({
+            "indices": [{ "names": index_patterns, "privileges": ["read", "view_index_metadata"] }]
+        });
+        self.expect_ok(
+            Method::PUT,
+            &format!("/_security/role/{role}"),
+            Some(&role_body),
+        )
+        .await?;
+        let user_body = json!({ "password": password, "roles": [role] });
+        self.expect_ok(
+            Method::PUT,
+            &format!("/_security/user/{username}"),
+            Some(&user_body),
+        )
+        .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn list_indices_for_alias(&self, prefix: &str) -> Result<Vec<String>, String> {
+        let path = format!("/_cat/indices/{prefix}*?format=json");
+        let (status, value) = self.send_json::<()>(Method::GET, &path, None).await?;
+        if status == StatusCode::NOT_FOUND {
+            return Ok(vec![]);
+        }
+        if !status.is_success() {
+            return Err(format!("{path}: {status}: {value}"));
+        }
+        Ok(index_names(&value))
+    }
+
+    pub(crate) async fn index_exists(&self, index: &str) -> Result<bool, String> {
+        let res = self
+            .request(Method::HEAD, &format!("/{index}"))
+            .send()
+            .await
+            .map_err(|e| format!("exists {index}: {e}"))?;
+        Ok(res.status().is_success())
+    }
+
+    pub(crate) async fn create_index(&self, index: &str, body: &Value) -> Result<(), String> {
+        if self.index_exists(index).await? {
+            return Ok(());
+        }
+        self.expect_ok(Method::PUT, &format!("/{index}"), Some(body))
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn put_refresh_interval(
+        &self,
+        index: &str,
+        value: &str,
+    ) -> Result<(), String> {
+        let body = json!({ "refresh_interval": value });
+        self.expect_ok(Method::PUT, &format!("/{index}/_settings"), Some(&body))
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn refresh(&self, index: &str) -> Result<(), String> {
+        self.expect_ok::<()>(Method::POST, &format!("/{index}/_refresh"), None)
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn alias_count(&self, alias: &str) -> Result<Option<u64>, String> {
+        let path = format!("/{alias}/_count");
+        let (status, value) = self.send_json::<()>(Method::GET, &path, None).await?;
+        if status == StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        if !status.is_success() {
+            return Err(format!("{path}: {status}: {value}"));
+        }
+        Ok(Some(
+            value.get("count").and_then(Value::as_u64).unwrap_or(0),
+        ))
+    }
+
+    pub(crate) async fn bulk(&self, index: &str, docs: &[(String, String)]) -> Result<(), String> {
+        let body = ndjson_body(index, docs);
+        let res = self
+            .request(Method::POST, "/_bulk")
+            .header("Content-Type", "application/x-ndjson")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| format!("bulk: {e}"))?;
+        let status = res.status();
+        let value: Value = res.json().await.unwrap_or(Value::Null);
+        if !status.is_success() {
+            return Err(format!("bulk: {status}: {value}"));
+        }
+        if let Some(reason) = first_bulk_error(&value) {
+            return Err(format!("bulk errors: {reason}"));
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn swap_alias(
+        &self,
+        alias: &str,
+        prefix: &str,
+        to_index: &str,
+    ) -> Result<(), String> {
+        let body = json!({
+            "actions": [
+                { "remove": { "alias": alias, "index": format!("{prefix}*"), "must_exist": false } },
+                { "add": { "alias": alias, "index": to_index } }
+            ]
+        });
+        self.expect_ok(Method::POST, "/_aliases", Some(&body))
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn delete_index_quietly(&self, index: &str) {
+        let _result = self
+            .request(Method::DELETE, &format!("/{index}?ignore_unavailable=true"))
+            .send()
+            .await;
+    }
+}
+
+pub(crate) fn ndjson_body(index: &str, docs: &[(String, String)]) -> String {
+    let mut body = String::new();
+    for (id, doc_json) in docs {
+        body.push_str(&json!({ "index": { "_index": index, "_id": id } }).to_string());
+        body.push('\n');
+        body.push_str(doc_json);
+        body.push('\n');
+    }
+    body
+}
+
+pub(crate) fn first_bulk_error(value: &Value) -> Option<&str> {
+    if !value["errors"].as_bool().unwrap_or(false) {
+        return None;
+    }
+    Some(
+        value
+            .get("items")
+            .and_then(Value::as_array)
+            .and_then(|items| {
+                items.iter().find_map(|item| {
+                    item.get("index")
+                        .and_then(|index| index.get("error"))
+                        .and_then(|error| error.get("reason"))
+                        .and_then(Value::as_str)
+                })
+            })
+            .unwrap_or("unknown"),
+    )
+}
+
+pub(crate) fn index_names(value: &Value) -> Vec<String> {
+    value
+        .as_array()
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|r| r["index"].as_str().map(str::to_string))
+                .filter(|s| !s.is_empty())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+pub(crate) fn next_index_name(prefix: &str, existing: &[String]) -> String {
+    let next = existing
+        .iter()
+        .filter(|name| name.starts_with(prefix))
+        .filter_map(|name| {
+            name.get(prefix.len()..)
+                .and_then(|suffix| suffix.parse::<u32>().ok())
+        })
+        .max()
+        .map_or(1, |v| v.saturating_add(1));
+    format!("{prefix}{next}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_next_index_name_follows_the_audit_table() {
+        let owned = |names: &[&str]| names.iter().map(|n| (*n).to_string()).collect::<Vec<_>>();
+        assert_eq!(next_index_name("poems_v", &[]), "poems_v1");
+        assert_eq!(
+            next_index_name("poems_v", &owned(&["poems_v1", "poems_v3"])),
+            "poems_v4"
+        );
+        assert_eq!(
+            next_index_name("poems_v", &owned(&["poems_v2_old", "poems_v", "poems_v1"])),
+            "poems_v2"
+        );
+        assert_eq!(
+            next_index_name("poems_v", &owned(&["poems_v007"])),
+            "poems_v8"
+        );
+        assert_eq!(
+            next_index_name("poems_v", &owned(&["poems_v+5"])),
+            "poems_v6"
+        );
+        assert_eq!(
+            next_index_name("poems_v", &owned(&["poets_v9"])),
+            "poems_v1"
+        );
+    }
+
+    #[test]
+    fn the_bulk_body_is_one_action_line_and_one_document_line_per_doc() {
+        let body = ndjson_body(
+            "poems_v1",
+            &[
+                ("TnKK".into(), "{\"a\":1}".into()),
+                ("abcd".into(), "{}".into()),
+            ],
+        );
+        assert_eq!(
+            body,
+            "{\"index\":{\"_id\":\"TnKK\",\"_index\":\"poems_v1\"}}\n{\"a\":1}\n{\"index\":{\"_id\":\"abcd\",\"_index\":\"poems_v1\"}}\n{}\n"
+        );
+        assert_eq!(ndjson_body("poems_v1", &[]), "");
+    }
+
+    #[test]
+    fn the_first_bulk_error_reason_is_surfaced_and_a_clean_response_has_none() {
+        let failed = json!({ "errors": true, "items": [ { "index": { "status": 201 } }, { "index": { "error": { "reason": "strict_dynamic_mapping_exception" } } } ] });
+        assert_eq!(
+            first_bulk_error(&failed),
+            Some("strict_dynamic_mapping_exception")
+        );
+        assert_eq!(
+            first_bulk_error(&json!({ "errors": true, "items": [] })),
+            Some("unknown")
+        );
+        assert_eq!(first_bulk_error(&json!({ "errors": false })), None);
+        assert_eq!(first_bulk_error(&Value::Null), None);
+    }
+
+    #[test]
+    fn cat_rows_yield_their_index_names_and_skip_blanks() {
+        let rows = json!([{ "index": "poems_v1" }, { "index": "" }, { "health": "green" }, { "index": "poems_v2" }]);
+        assert_eq!(
+            index_names(&rows),
+            vec!["poems_v1".to_string(), "poems_v2".to_string()]
+        );
+        assert!(index_names(&Value::Null).is_empty());
+    }
+
+    async fn serve_raw(status: &'static str, body: &'static str) -> std::net::SocketAddr {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("an ephemeral port");
+        let address = listener.local_addr().expect("a bound address");
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = listener.accept().await {
+                let response = format!(
+                    "HTTP/1.1 {status}\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _unused =
+                    tokio::io::AsyncWriteExt::write_all(&mut socket, response.as_bytes()).await;
+            }
+        });
+        address
+    }
+
+    #[tokio::test]
+    async fn a_missing_alias_is_none_and_an_existing_one_is_its_count() {
+        let address = serve_raw("404 Not Found", "{\"error\":\"index_not_found_exception\"}").await;
+        let es = Es::with_timeout(&format!("http://{address}"), Duration::from_secs(2))
+            .expect("an endpoint");
+        assert_eq!(es.alias_count("poems").await.expect("a count"), None);
+
+        let address = serve_raw("200 OK", "{\"count\":42}").await;
+        let es = Es::with_timeout(&format!("http://{address}"), Duration::from_secs(2))
+            .expect("an endpoint");
+        assert_eq!(es.alias_count("poems").await.expect("a count"), Some(42));
+    }
+
+    #[tokio::test]
+    async fn an_elasticsearch_that_never_answers_times_the_request_out() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("an ephemeral port");
+        let address = listener.local_addr().expect("a bound address");
+        tokio::spawn(async move {
+            let mut held = Vec::new();
+            while let Ok((socket, _)) = listener.accept().await {
+                held.push(socket);
+            }
+        });
+
+        let es = Es::with_timeout(&format!("http://{address}"), Duration::from_millis(250))
+            .expect("an endpoint");
+        let outcome = tokio::time::timeout(Duration::from_secs(5), es.alias_count("poems")).await;
+
+        assert!(
+            outcome
+                .expect("the count must give up on its own, not be rescued")
+                .is_err()
+        );
+    }
+}

@@ -1,0 +1,14 @@
+---
+import ListPageBody from '@/components/list-page-body.astro';
+import Layout from '@/layouts/layout.astro';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { buildTaxonomyIndexView, loadTaxonomyIndex } from '@/lib/seo/taxonomy-pages';
+
+const terms = await loadTaxonomyIndex('themes');
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+const { layout, body } = buildTaxonomyIndexView('themes', terms);
+---
+
+<Layout {...layout}>
+  <ListPageBody {...body} />
+</Layout>

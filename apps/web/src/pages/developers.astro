@@ -1,0 +1,52 @@
+---
+import ApiExample from '@/components/developers/api-example.astro';
+import RateLimits from '@/components/developers/rate-limits.astro';
+import { buttonVariants } from '@/components/ui/button';
+import Layout from '@/layouts/layout.astro';
+import { API_URL } from '@/lib/constants/config';
+import { INLINE_LINK, TYPE } from '@/lib/constants/design-tokens';
+import { CACHE_HTML } from '@/lib/server/cache';
+import { withBrand } from '@/lib/seo/meta-text';
+import { cn } from '@/lib/utils';
+import { API_V1_PREFIX } from '@qafiyah/config';
+
+const TITLE = withBrand('للمطورين');
+const DESCRIPTION =
+  'واجهة قافية البرمجية: وصول مفتوح إلى القصائد والشعراء والبحور والقوافي والأغراض والدواوين والبحث، مع مفتاح مجاني لحدود استخدام أعلى.';
+
+const API_DOCS_URL = `${API_URL}${API_V1_PREFIX}/docs`;
+
+const PARAGRAPH = `${TYPE.body} text-text-muted leading-[1.8]`;
+
+Astro.response.headers.set('Cache-Control', CACHE_HTML);
+---
+
+<Layout title={TITLE} description={DESCRIPTION} canonical="/developers">
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-12 py-16" dir="rtl">
+    <header class="flex flex-col gap-4">
+      <h1 class={`${TYPE.heading} text-text`}>للمطورين</h1>
+      <p class={PARAGRAPH}>
+        كل ما في قافية متاح عبر واجهة برمجية مفتوحة تُرجع JSON: القصائد والشعراء والبحور والقوافي
+        والأغراض والعصور والدواوين، والبحث بالطريقة نفسها التي يعمل بها الموقع.
+      </p>
+      <div class="flex flex-wrap items-center gap-4">
+        <a href="/login" rel="nofollow" class={cn(buttonVariants(), 'h-10 px-5 text-base')}>
+          احصل على مفتاح
+        </a>
+        <a href={API_DOCS_URL} target="_blank" rel="noopener noreferrer" class={INLINE_LINK}>
+          التوثيق الكامل
+        </a>
+      </div>
+    </header>
+
+    <section class="flex flex-col gap-4" aria-labelledby="dev-example">
+      <h2 id="dev-example" class={`${TYPE.subheading} text-text`}>مثال</h2>
+      <ApiExample class={PARAGRAPH} />
+    </section>
+
+    <section class="flex flex-col gap-4" aria-labelledby="dev-limits">
+      <h2 id="dev-limits" class={`${TYPE.subheading} text-text`}>حدود الاستخدام</h2>
+      <RateLimits class={PARAGRAPH} />
+    </section>
+  </div>
+</Layout>

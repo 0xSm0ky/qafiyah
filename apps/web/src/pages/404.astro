@@ -1,0 +1,36 @@
+---
+import {
+  ERROR_TEXTS,
+  NOT_FOUND_CODE,
+  NOT_FOUND_MESSAGE_AR,
+  NOT_FOUND_TITLE,
+} from '@/lib/constants/copy';
+import Layout from '@/layouts/layout.astro';
+import { CACHE_NONE } from '@/lib/server/cache';
+
+Astro.response.status = 404;
+Astro.response.headers.set('Cache-Control', CACHE_NONE);
+---
+
+<Layout title={NOT_FOUND_TITLE} description={NOT_FOUND_MESSAGE_AR} robotsIndex={false}>
+  <div class="mx-auto flex h-full flex-col items-center justify-center gap-12 text-center">
+    <div class="flex flex-col items-center justify-center gap-2">
+      <h1 class="text-9xl text-text-subtle">{NOT_FOUND_CODE}</h1>
+      <p class="text-4xl leading-[1.45] text-text-muted">{NOT_FOUND_MESSAGE_AR}</p>
+    </div>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/"
+        class="rounded-md bg-accent px-5 py-2 text-caption text-surface focus-ring transition-colors hover:opacity-90"
+      >
+        {ERROR_TEXTS.goHome}
+      </a>
+      <a
+        href="/poets"
+        class="rounded-md border border-border bg-transparent px-5 py-2 text-caption text-text-muted focus-ring transition-colors hover:bg-surface-hover"
+      >
+        تصفّح الشعراء
+      </a>
+    </div>
+  </div>
+</Layout>

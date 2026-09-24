@@ -1,0 +1,40 @@
+services:
+  db:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-db
+    ports: !override
+      - "127.0.0.1:${DEV_POSTGRES_PORT:-5434}:5432"
+  api:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-api
+  web:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-web
+  edge-gateway:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-edge-gateway
+    environment:
+      SET_REAL_IP_FROM: 172.29.0.1
+    ports: !override
+      - "127.0.0.1:${DEV_EDGE_PORT:-8090}:8080"
+  elasticsearch:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-es
+    ports: !override
+      - "127.0.0.1:${DEV_ES_PORT:-9201}:9200"
+    environment:
+      ES_JAVA_OPTS: "-Xms1500m -Xmx1500m"
+    mem_limit: 3g
+  search-indexer:
+    container_name: qafiyah-dev${DEV_SUFFIX:-}-search-indexer
+
+volumes:
+  db_data:
+    name: qafiyah-dev${DEV_SUFFIX:-}-db-data
+  es_data:
+    name: qafiyah-dev${DEV_SUFFIX:-}-es-data
+
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+  backend:
+    ipam:
+      config:
+        - subnet: 172.26.0.0/24

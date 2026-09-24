@@ -1,0 +1,65 @@
+---
+import { Footer } from '@/components/footer';
+import ModuleReloadRecovery from '@/components/layout/module-reload-recovery.astro';
+import Nav from '@/components/layout/nav.astro';
+import PostHog from '@/components/layout/posthog.astro';
+import SEO, { type Props as SeoProps } from '@/components/layout/seo.astro';
+import ThemeInit from '@/components/layout/theme-init.astro';
+import ViewerInit from '@/components/layout/viewer-init.astro';
+import LayoutDebug from '@/components/layout/layout-debug.astro';
+import { isDev, POSTHOG_HOST, TELEMETRY_PROXY_URL } from '@/lib/constants/config';
+import { SITE_LANGUAGE } from '@/lib/constants/site-meta';
+import '@/styles/globals.css';
+
+interface Props extends SeoProps {
+  bare?: boolean;
+}
+
+const { bare = false, ...seo } = Astro.props;
+
+const htmlClass = isDev ? 'debug-screens' : '';
+---
+
+<html
+  lang={SITE_LANGUAGE}
+  dir="rtl"
+  class={`bg-surface text-text font-sans antialiased overflow-x-hidden overflow-y-scroll ${htmlClass}`}
+>
+  <head>
+    <ModuleReloadRecovery />
+    <SEO {...seo} />
+    {!isDev && <PostHog />}
+    {!isDev && <link rel="preconnect" href={POSTHOG_HOST} crossorigin />}
+    {!isDev && <link rel="preconnect" href={TELEMETRY_PROXY_URL} crossorigin />}
+    <ThemeInit />
+    <ViewerInit />
+    {isDev && <LayoutDebug />}
+  </head>
+  {
+    bare ? (
+      <body class="grid min-h-svh place-items-center bg-surface px-4 py-10 font-sans text-text">
+        <main id="main" tabindex="-1" class="w-full focus:outline-none">
+          <slot />
+        </main>
+      </body>
+    ) : (
+      <body class="relative mx-auto grid min-h-svh w-full max-w-5xl grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] [overflow-x:clip] bg-surface px-(--gutter) font-sans text-text">
+        <a
+          href="#main"
+          class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-surface"
+        >
+          تخطَّ إلى المحتوى
+        </a>
+        <Nav />
+        <main
+          id="main"
+          tabindex="-1"
+          class="row-start-2 flex w-full flex-1 items-start justify-start focus:outline-none"
+        >
+          <slot />
+        </main>
+        <Footer client:idle />
+      </body>
+    )
+  }
+</html>

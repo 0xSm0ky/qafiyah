@@ -1,0 +1,44 @@
+---
+import { MODULE_RELOAD_COOLDOWN_MS, MODULE_RELOAD_STORAGE_KEY } from '@/lib/constants/config';
+---
+
+<script
+  is:inline
+  data-cfasync="false"
+  define:vars={{
+    key: MODULE_RELOAD_STORAGE_KEY,
+    cooldown: MODULE_RELOAD_COOLDOWN_MS,
+  }}
+>
+  const pattern =
+    /importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|module script failed to load|unexpected token '<'/i;
+
+  const isModuleImportFailure = (reason) => {
+    if (!reason) return false;
+    if (typeof reason === 'string') return pattern.test(reason);
+    if (typeof reason.message === 'string') return pattern.test(reason.message);
+    return false;
+  };
+
+  const recoverOnce = () => {
+    const now = Date.now();
+    let last = 0;
+    try {
+      last = Number.parseInt(sessionStorage.getItem(key) ?? '0', 10) || 0;
+    } catch {}
+    if (now - last < cooldown) return;
+    try {
+      sessionStorage.setItem(key, String(now));
+    } catch {}
+    window.location.reload();
+  };
+
+  window.addEventListener('unhandledrejection', (event) => {
+    if (isModuleImportFailure(event.reason)) recoverOnce();
+  });
+
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    recoverOnce();
+  });
+</script>

@@ -1,0 +1,74 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": false,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "es5",
+  "semi": true,
+  "arrowParens": "always",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "singleAttributePerLine": false,
+  "endOfLine": "lf",
+  "proseWrap": "preserve",
+  "insertFinalNewline": true,
+  "sortPackageJson": false,
+  "sortImports": {
+    "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "type"],
+    "internalPattern": ["@/", "~/", "@qafiyah/"]
+  },
+  "sortTailwindcss": {
+    "attributes": ["class", "className"],
+    "functions": ["clsx", "cn", "tw"],
+    "stylesheet": "./apps/web/src/styles/globals.css"
+  },
+  "ignorePatterns": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/.next",
+    "**/.turbo",
+    "**/coverage",
+    "**/*.min.js",
+    "**/*.svg",
+    "**/bun.lock",
+    "**/data",
+    "**/env.d.ts",
+    "**/worker-configuration.d.ts",
+    "apps/web/.astro",
+    "**/*.html",
+    "apps/api/generated/openapi/openapi.json",
+    "apps/web/src/lib/generated/openapi/schema.gen.ts",
+    "apps/api/generated/es/query.vectors.json"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.css"],
+      "options": {
+        "singleQuote": false
+      }
+    },
+    {
+      "files": ["**/*.json", "**/*.jsonc"],
+      "options": {
+        "singleQuote": false,
+        "trailingComma": "none"
+      }
+    },
+    {
+      "files": ["**/*.yml", "**/*.yaml"],
+      "options": {
+        "singleQuote": false
+      }
+    },
+    {
+      "files": ["**/*.md", "**/*.mdx"],
+      "options": {
+        "embeddedLanguageFormatting": "off"
+      }
+    }
+  ]
+}

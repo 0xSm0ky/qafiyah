@@ -1,0 +1,2945 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Qafiyah API",
+    "description": "Public, read-only REST API for the Qafiyah Arabic classical-poetry catalog.\n\nBrowse poems and poets and filter them by the taxonomies they belong to: eras, meters, rhymes, themes, and collections. Full-text search spans both poems and poets.\n\nConventions:\n- All endpoints are GET and require no authentication.\n- Resources are addressed by stable `slug` identifiers returned in list responses.\n- List endpoints are paginated via a 1-based `page` query param and return a `pagination` block.\n- Multi-select filters are repeatable array params, e.g. `?era=abbasi&era=andalusi`.\n- Errors follow RFC 9457 problem details and are served as `application/problem+json`.\n- Requests are rate limited. Rate-limited responses carry `x-ratelimit-limit`, `x-ratelimit-remaining`, and `x-ratelimit-reset`.",
+    "contact": {
+      "name": "Qafiyah",
+      "url": "https://qafiyah.com"
+    },
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/v1"
+    }
+  ],
+  "paths": {
+    "/collections": {
+      "get": {
+        "tags": [
+          "collections"
+        ],
+        "description": "All curated poem collections (al-dawawin) with poem counts.",
+        "operationId": "collections.list",
+        "responses": {
+          "200": {
+            "description": "All collections.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_PoemCountStats"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/collections/{slug}": {
+      "get": {
+        "tags": [
+          "collections"
+        ],
+        "description": "A single collection with poem count, by slug.",
+        "operationId": "collections.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "almuallaqat"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_PoemCountStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eras": {
+      "get": {
+        "tags": [
+          "eras"
+        ],
+        "description": "All literary eras (al-usur al-adabiyya) with poem and poet counts.",
+        "operationId": "eras.list",
+        "responses": {
+          "200": {
+            "description": "All eras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eras/{slug}": {
+      "get": {
+        "tags": [
+          "eras"
+        ],
+        "description": "A single era with poem and poet counts, by slug.",
+        "operationId": "eras.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "abbasi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested era.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meters": {
+      "get": {
+        "tags": [
+          "meters"
+        ],
+        "description": "All prosodic meters (al-buhur) with poem and poet counts.",
+        "operationId": "meters.list",
+        "responses": {
+          "200": {
+            "description": "All meters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meters/{slug}": {
+      "get": {
+        "tags": [
+          "meters"
+        ],
+        "description": "A single meter with poem and poet counts, by slug.",
+        "operationId": "meters.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "altawil"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested meter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poems": {
+      "get": {
+        "tags": [
+          "poems"
+        ],
+        "description": "Paginated list of poems with optional multi-select facet filters (poet, era, theme, meter, rhyme, collection). Facets combine conjunctively; repeating a single facet ORs its values.",
+        "operationId": "poems.list",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "poet",
+            "in": "query",
+            "description": "Filter by poet slug. Repeatable array param, e.g. ?poet=yoFB. Values are `slug` from GET /poets.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FourLetterSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "yoFB"
+            ]
+          },
+          {
+            "name": "era",
+            "in": "query",
+            "description": "Filter by era slug. Repeatable array param, e.g. ?era=abbasi. Values are `slug` from GET /eras.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "abbasi"
+            ]
+          },
+          {
+            "name": "theme",
+            "in": "query",
+            "description": "Filter by theme slug. Repeatable array param, e.g. ?theme=alnasib. Values are `slug` from GET /themes.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "alnasib"
+            ]
+          },
+          {
+            "name": "meter",
+            "in": "query",
+            "description": "Filter by meter slug. Repeatable array param, e.g. ?meter=altawil. Values are `slug` from GET /meters.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "altawil"
+            ]
+          },
+          {
+            "name": "rhyme",
+            "in": "query",
+            "description": "Filter by rhyme slug. Repeatable array param, e.g. ?rhyme=meem. Values are `slug` from GET /rhymes.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "meem"
+            ]
+          },
+          {
+            "name": "collection",
+            "in": "query",
+            "description": "Filter by collection slug. Repeatable array param, e.g. ?collection=almuallaqat. Values are `slug` from GET /collections.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "almuallaqat"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of poems with pagination metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_PoemListItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poems/count": {
+      "get": {
+        "tags": [
+          "poems"
+        ],
+        "description": "Total number of poems in the catalog.",
+        "operationId": "poems.count",
+        "responses": {
+          "200": {
+            "description": "The total poem count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_Total"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poems/slugs": {
+      "get": {
+        "tags": [
+          "poems"
+        ],
+        "description": "Paginated stream of poem slugs only, intended for sitemap generation and incremental crawling.",
+        "operationId": "poems.listSlugs",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of poem slugs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_FourLetterSlug"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poems/{slug}": {
+      "get": {
+        "tags": [
+          "poems"
+        ],
+        "description": "Full poem detail by slug, including verses, prosody metadata, and related poems.",
+        "operationId": "poems.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]{4}$"
+            },
+            "example": "TnKK"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested poem.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_PoemDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poets": {
+      "get": {
+        "tags": [
+          "poets"
+        ],
+        "description": "Paginated, Elasticsearch-backed list of poets with poem counts, ordered by poem count descending. Narrow by era or by a full-text name query `q`, which orders by relevance instead.",
+        "operationId": "poets.list",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1, maximum 1666 (offsets past this exceed the Elasticsearch result window).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "era",
+            "in": "query",
+            "description": "Filter to poets of a single era. Value is a `slug` from GET /eras.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "abbasi"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text query matched against poet names.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "example": "المتنبي"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of poets with pagination metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_PoetListItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poets/slugs": {
+      "get": {
+        "tags": [
+          "poets"
+        ],
+        "description": "Paginated stream of poet slugs with an avatar flag, intended for sitemap generation and incremental crawling.",
+        "operationId": "poets.listSlugs",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of poet slugs, each flagged with whether the poet has an avatar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_PoetSlugEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poets/{slug}": {
+      "get": {
+        "tags": [
+          "poets"
+        ],
+        "description": "A single poet with nickname, bio, era, avatar flag, and poem count, by slug.",
+        "operationId": "poets.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]{4}$"
+            },
+            "example": "yoFB"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested poet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_PoetStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rhymes": {
+      "get": {
+        "tags": [
+          "rhymes"
+        ],
+        "description": "All rhyme letters (al-qawafi) with poem and poet counts.",
+        "operationId": "rhymes.list",
+        "responses": {
+          "200": {
+            "description": "All rhymes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rhymes/{slug}": {
+      "get": {
+        "tags": [
+          "rhymes"
+        ],
+        "description": "A single rhyme with poem and poet counts, by slug.",
+        "operationId": "rhymes.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "meem"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested rhyme.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_CountedStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "description": "Full-text search over poems and poets with optional facet filters. Array filters are repeatable params, e.g. ?eraSlugs=andalusi&meterSlugs=altawil. Poets are filterable by era only; meter, rhyme, theme, and collection filters apply to poems and are rejected with a 400 when the `poets` result type is requested. Unknown query params are ignored.",
+        "operationId": "search.search",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search query in Arabic. An empty query returns no matches.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "example": "المتنبي"
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "description": "Result types to include. Defaults to all types when omitted.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SearchTypeParam"
+              },
+              "maxItems": 2
+            }
+          },
+          {
+            "name": "poemsPage",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1, maximum 500 (offsets past this exceed the Elasticsearch result window).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "poetsPage",
+            "in": "query",
+            "description": "Page number as a 1-based integer string. Minimum 1, maximum 500 (offsets past this exceed the Elasticsearch result window).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "poetSlugs",
+            "in": "query",
+            "description": "Filter results by poet slug. Repeatable array param, e.g. ?poetSlugs=yoFB. Slugs are the `slug` values from GET /poets.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FourLetterSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "yoFB"
+            ]
+          },
+          {
+            "name": "eraSlugs",
+            "in": "query",
+            "description": "Filter results by era slug. Repeatable array param, e.g. ?eraSlugs=abbasi. Slugs are the `slug` values from GET /eras.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "abbasi"
+            ]
+          },
+          {
+            "name": "meterSlugs",
+            "in": "query",
+            "description": "Filter poems by meter slug. Applies to the poems result set only and cannot be combined with the `poets` result type. Repeatable array param, e.g. ?meterSlugs=altawil. Slugs are the `slug` values from GET /meters.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "altawil"
+            ]
+          },
+          {
+            "name": "rhymeSlugs",
+            "in": "query",
+            "description": "Filter poems by rhyme slug. Applies to the poems result set only and cannot be combined with the `poets` result type. Repeatable array param, e.g. ?rhymeSlugs=meem. Slugs are the `slug` values from GET /rhymes.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "meem"
+            ]
+          },
+          {
+            "name": "themeSlugs",
+            "in": "query",
+            "description": "Filter poems by theme slug. Applies to the poems result set only and cannot be combined with the `poets` result type. Repeatable array param, e.g. ?themeSlugs=alnasib. Slugs are the `slug` values from GET /themes.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "alnasib"
+            ]
+          },
+          {
+            "name": "collectionSlugs",
+            "in": "query",
+            "description": "Filter poems by collection slug. Applies to the poems result set only and cannot be combined with the `poets` result type. Repeatable array param, e.g. ?collectionSlugs=almuallaqat. Slugs are the `slug` values from GET /collections.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TransliteratedSlug"
+              },
+              "default": [],
+              "maxItems": 100
+            },
+            "example": [
+              "almuallaqat"
+            ]
+          },
+          {
+            "name": "exact",
+            "in": "query",
+            "description": "When true, match the literal phrase only (poem content and poet name), with no stemming, fuzzy, or autocomplete expansion (Arabic letter normalization still applies). Applies to both result sets.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ExactFlag"
+            },
+            "example": "false"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Echoed query plus the requested poem and poet result sections.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/themes": {
+      "get": {
+        "tags": [
+          "themes"
+        ],
+        "description": "All thematic categories (al-aghrad) with poem counts.",
+        "operationId": "themes.list",
+        "responses": {
+          "200": {
+            "description": "All themes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEnvelope_PoemCountStats"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/themes/{slug}": {
+      "get": {
+        "tags": [
+          "themes"
+        ],
+        "description": "A single theme with poem count, by slug.",
+        "operationId": "themes.get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Resource identifier taken from the `slug` field of the matching list endpoint.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z-]*$"
+            },
+            "example": "alnasib"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested theme.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemEnvelope_PoemCountStats"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Seconds until the window resets"
+              },
+              "x-ratelimit-limit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests allowed per hour"
+              },
+              "x-ratelimit-remaining": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Requests left in the current hour"
+              },
+              "x-ratelimit-reset": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unix seconds at which the window resets"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CountedStats": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "poemsCount",
+          "poetsCount"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "poemsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 44474
+          },
+          "poetsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3637
+          },
+          "slug": {
+            "type": "string",
+            "example": "altawil",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "EraRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "abbasi",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "ExactFlag": {
+        "type": "string",
+        "enum": [
+          "true",
+          "false"
+        ]
+      },
+      "FourLetterSlug": {
+        "type": "string",
+        "pattern": "^[a-zA-Z]{4}$"
+      },
+      "ItemEnvelope_CountedStats": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "name",
+              "slug",
+              "poemsCount",
+              "poetsCount"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "poemsCount": {
+                "type": "integer",
+                "format": "int32",
+                "example": 44474
+              },
+              "poetsCount": {
+                "type": "integer",
+                "format": "int32",
+                "example": 3637
+              },
+              "slug": {
+                "type": "string",
+                "example": "altawil",
+                "pattern": "^[a-z][a-z-]*$"
+              }
+            }
+          }
+        }
+      },
+      "ItemEnvelope_PoemCountStats": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "name",
+              "slug",
+              "poemsCount"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "poemsCount": {
+                "type": "integer",
+                "format": "int32",
+                "example": 47457
+              },
+              "slug": {
+                "type": "string",
+                "example": "alnasib",
+                "pattern": "^[a-z][a-z-]*$"
+              }
+            }
+          }
+        }
+      },
+      "ItemEnvelope_PoemDetail": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "title",
+              "slug",
+              "verses",
+              "verseCount",
+              "sample",
+              "keywords",
+              "poet",
+              "era",
+              "meter",
+              "theme",
+              "rhyme",
+              "poemType",
+              "relatedPoems"
+            ],
+            "properties": {
+              "era": {
+                "$ref": "#/components/schemas/EraRef"
+              },
+              "keywords": {
+                "type": "string"
+              },
+              "meter": {
+                "$ref": "#/components/schemas/MeterRef"
+              },
+              "next": {
+                "$ref": "#/components/schemas/PoemNavRef"
+              },
+              "poemType": {
+                "$ref": "#/components/schemas/PoemTypeRef"
+              },
+              "poet": {
+                "$ref": "#/components/schemas/PoetRef"
+              },
+              "prev": {
+                "$ref": "#/components/schemas/PoemNavRef"
+              },
+              "relatedPoems": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PoemListItem"
+                }
+              },
+              "rhyme": {
+                "$ref": "#/components/schemas/RhymeRef"
+              },
+              "sample": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string",
+                "example": "TnKK",
+                "pattern": "^[a-zA-Z]{4}$"
+              },
+              "theme": {
+                "$ref": "#/components/schemas/ThemeRef"
+              },
+              "title": {
+                "type": "string"
+              },
+              "verseCount": {
+                "type": "integer",
+                "format": "int32",
+                "example": 10
+              },
+              "verses": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                }
+              }
+            }
+          }
+        }
+      },
+      "ItemEnvelope_PoetStats": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "name",
+              "slug",
+              "era",
+              "poemsCount",
+              "hasAvatar"
+            ],
+            "properties": {
+              "bio": {
+                "type": "string"
+              },
+              "era": {
+                "$ref": "#/components/schemas/EraRef"
+              },
+              "hasAvatar": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "nickname": {
+                "type": "string"
+              },
+              "poemsCount": {
+                "type": "integer",
+                "format": "int32",
+                "example": 2967
+              },
+              "slug": {
+                "type": "string",
+                "example": "yoFB",
+                "pattern": "^[a-zA-Z]{4}$"
+              }
+            }
+          }
+        }
+      },
+      "ItemEnvelope_Total": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "total"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "example": 394174
+              }
+            }
+          }
+        }
+      },
+      "ListEnvelope_CountedStats": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "slug",
+                "poemsCount",
+                "poetsCount"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "poemsCount": {
+                  "type": "integer",
+                  "format": "int32",
+                  "example": 44474
+                },
+                "poetsCount": {
+                  "type": "integer",
+                  "format": "int32",
+                  "example": 3637
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "altawil",
+                  "pattern": "^[a-z][a-z-]*$"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_FourLetterSlug": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]{4}$"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoemCountStats": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "slug",
+                "poemsCount"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "poemsCount": {
+                  "type": "integer",
+                  "format": "int32",
+                  "example": 47457
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "alnasib",
+                  "pattern": "^[a-z][a-z-]*$"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoemListItem": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "slug",
+                "poet",
+                "meter"
+              ],
+              "properties": {
+                "era": {
+                  "$ref": "#/components/schemas/EraRef"
+                },
+                "meter": {
+                  "$ref": "#/components/schemas/MeterRef"
+                },
+                "poet": {
+                  "$ref": "#/components/schemas/PoetRef"
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "TnKK",
+                  "pattern": "^[a-zA-Z]{4}$"
+                },
+                "title": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoemResult": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "title",
+                "slug",
+                "snippet",
+                "poet",
+                "meter",
+                "era",
+                "relevance"
+              ],
+              "properties": {
+                "era": {
+                  "$ref": "#/components/schemas/EraRef"
+                },
+                "meter": {
+                  "$ref": "#/components/schemas/MeterRef"
+                },
+                "poet": {
+                  "$ref": "#/components/schemas/PoetRef"
+                },
+                "relevance": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "TnKK",
+                  "pattern": "^[a-zA-Z]{4}$"
+                },
+                "snippet": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "$ref": "#/components/schemas/PoemKind"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoetListItem": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "slug",
+                "poemsCount"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "poemsCount": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 42
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "yoFB",
+                  "pattern": "^[a-zA-Z]{4}$"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoetResult": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "name",
+                "slug",
+                "era",
+                "relevance"
+              ],
+              "properties": {
+                "era": {
+                  "$ref": "#/components/schemas/EraRef"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "relevance": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "yoFB",
+                  "pattern": "^[a-zA-Z]{4}$"
+                },
+                "type": {
+                  "$ref": "#/components/schemas/PoetKind"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "ListEnvelope_PoetSlugEntry": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "slug",
+                "hasAvatar"
+              ],
+              "properties": {
+                "hasAvatar": {
+                  "type": "boolean"
+                },
+                "slug": {
+                  "type": "string",
+                  "example": "yoFB",
+                  "pattern": "^[a-zA-Z]{4}$"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "MeterRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "altawil",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "required": [
+          "page",
+          "pageSize",
+          "totalPages",
+          "totalItems"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1,
+            "minimum": 0
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20,
+            "minimum": 0
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int32",
+            "example": 93,
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 5,
+            "minimum": 0
+          }
+        }
+      },
+      "PoemCountStats": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "poemsCount"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "poemsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 47457
+          },
+          "slug": {
+            "type": "string",
+            "example": "alnasib",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "PoemDetail": {
+        "type": "object",
+        "required": [
+          "title",
+          "slug",
+          "verses",
+          "verseCount",
+          "sample",
+          "keywords",
+          "poet",
+          "era",
+          "meter",
+          "theme",
+          "rhyme",
+          "poemType",
+          "relatedPoems"
+        ],
+        "properties": {
+          "era": {
+            "$ref": "#/components/schemas/EraRef"
+          },
+          "keywords": {
+            "type": "string"
+          },
+          "meter": {
+            "$ref": "#/components/schemas/MeterRef"
+          },
+          "next": {
+            "$ref": "#/components/schemas/PoemNavRef"
+          },
+          "poemType": {
+            "$ref": "#/components/schemas/PoemTypeRef"
+          },
+          "poet": {
+            "$ref": "#/components/schemas/PoetRef"
+          },
+          "prev": {
+            "$ref": "#/components/schemas/PoemNavRef"
+          },
+          "relatedPoems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PoemListItem"
+            }
+          },
+          "rhyme": {
+            "$ref": "#/components/schemas/RhymeRef"
+          },
+          "sample": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "TnKK",
+            "pattern": "^[a-zA-Z]{4}$"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/ThemeRef"
+          },
+          "title": {
+            "type": "string"
+          },
+          "verseCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 10
+          },
+          "verses": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": false,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "maxItems": 2,
+              "minItems": 2
+            }
+          }
+        }
+      },
+      "PoemKind": {
+        "type": "string",
+        "enum": [
+          "poem"
+        ]
+      },
+      "PoemListItem": {
+        "type": "object",
+        "required": [
+          "title",
+          "slug",
+          "poet",
+          "meter"
+        ],
+        "properties": {
+          "era": {
+            "$ref": "#/components/schemas/EraRef"
+          },
+          "meter": {
+            "$ref": "#/components/schemas/MeterRef"
+          },
+          "poet": {
+            "$ref": "#/components/schemas/PoetRef"
+          },
+          "slug": {
+            "type": "string",
+            "example": "TnKK",
+            "pattern": "^[a-zA-Z]{4}$"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "PoemNavRef": {
+        "type": "object",
+        "required": [
+          "title",
+          "slug"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "TnKK",
+            "pattern": "^[a-zA-Z]{4}$"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "PoemTypeRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "amudi",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "PoetKind": {
+        "type": "string",
+        "enum": [
+          "poet"
+        ]
+      },
+      "PoetListItem": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "poemsCount"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "poemsCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 42
+          },
+          "slug": {
+            "type": "string",
+            "example": "yoFB",
+            "pattern": "^[a-zA-Z]{4}$"
+          }
+        }
+      },
+      "PoetRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "hasAvatar"
+        ],
+        "properties": {
+          "hasAvatar": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "yoFB",
+            "pattern": "^[a-zA-Z]{4}$"
+          }
+        }
+      },
+      "PoetSlugEntry": {
+        "type": "object",
+        "required": [
+          "slug",
+          "hasAvatar"
+        ],
+        "properties": {
+          "hasAvatar": {
+            "type": "boolean"
+          },
+          "slug": {
+            "type": "string",
+            "example": "yoFB",
+            "pattern": "^[a-zA-Z]{4}$"
+          }
+        }
+      },
+      "PoetStats": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "era",
+          "poemsCount",
+          "hasAvatar"
+        ],
+        "properties": {
+          "bio": {
+            "type": "string"
+          },
+          "era": {
+            "$ref": "#/components/schemas/EraRef"
+          },
+          "hasAvatar": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "poemsCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 2967
+          },
+          "slug": {
+            "type": "string",
+            "example": "yoFB",
+            "pattern": "^[a-zA-Z]{4}$"
+          }
+        }
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "instance",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "NOT_FOUND"
+          },
+          "detail": {
+            "type": "string",
+            "example": "Meter not found"
+          },
+          "instance": {
+            "type": "string",
+            "example": "/v1/meters/zzzz"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "example": 404
+          },
+          "title": {
+            "type": "string",
+            "example": "Resource not found"
+          },
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://qafiyah.com/errors/not-found"
+          }
+        }
+      },
+      "RhymeRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "meem",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": [
+          "q"
+        ],
+        "properties": {
+          "poems": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ListEnvelope_PoemResult"
+              }
+            ]
+          },
+          "poets": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ListEnvelope_PoetResult"
+              }
+            ]
+          },
+          "q": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchTypeParam": {
+        "type": "string",
+        "enum": [
+          "poems",
+          "poets"
+        ]
+      },
+      "ThemeRef": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "example": "alnasib",
+            "pattern": "^[a-z][a-z-]*$"
+          }
+        }
+      },
+      "Total": {
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32",
+            "example": 394174
+          }
+        }
+      },
+      "TransliteratedSlug": {
+        "type": "string",
+        "pattern": "^[a-z][a-z-]*$"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "poems",
+      "description": "Browse, filter, and retrieve poems and their full verse text."
+    },
+    {
+      "name": "poets",
+      "description": "Browse and retrieve poets, searchable by name and filterable by era."
+    },
+    {
+      "name": "search",
+      "description": "Full-text search across poems and poets with facet filters."
+    },
+    {
+      "name": "eras",
+      "description": "Literary eras (al-usur al-adabiyya) used to classify poems and poets."
+    },
+    {
+      "name": "meters",
+      "description": "Prosodic meters (al-buhur) of classical Arabic poetry."
+    },
+    {
+      "name": "rhymes",
+      "description": "Rhyme letters (al-qawafi) used to classify poems."
+    },
+    {
+      "name": "themes",
+      "description": "Thematic categories (al-aghrad) of poems."
+    },
+    {
+      "name": "collections",
+      "description": "Curated collections (al-dawawin) of poems."
+    }
+  ]
+}

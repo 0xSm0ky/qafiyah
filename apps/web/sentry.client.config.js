@@ -1,0 +1,45 @@
+import * as Sentry from '@sentry/astro';
+
+const LOW_SIGNAL_REJECTION_MAX_LENGTH = 3;
+
+function isLowSignalRejection(event) {
+  const values = event.exception?.values;
+  if (!values || values.length === 0) {
+    return false;
+  }
+  return values.every((value) => {
+    const isUnhandledRejection = value.mechanism?.type === 'onunhandledrejection';
+    const hasNoStack = (value.stacktrace?.frames?.length ?? 0) === 0;
+    const message = value.value?.trim() ?? '';
+    return isUnhandledRejection && hasNoStack && message.length <= LOW_SIGNAL_REJECTION_MAX_LENGTH;
+  });
+}
+
+Sentry.init({
+  dsn: 'https://acbece4802d36f6e2904c8d673635c0d@t.qafiyah.com/4511594177560576',
+  enabled: !import.meta.env.DEV,
+  environment: import.meta.env.DEV ? 'development' : 'production',
+  tracesSampleRate: 0,
+  dataCollection: {
+    cookies: false,
+    urlQueryParams: false,
+    frameContextLines: 7,
+  },
+  ignoreErrors: [
+    /__firefox__/,
+    /__gCrWeb/,
+    /window\.webkit\.messageHandlers/,
+    /currentInset/,
+    /Unexpected token '<'/,
+    /Importing a module script failed/,
+    /Failed to fetch dynamically imported module/,
+    /error loading dynamically imported module/,
+    /module script failed to load/,
+  ],
+  beforeSend: (event) => {
+    if (event.request?.url) {
+      event.request.url = event.request.url.split('?')[0];
+    }
+    return isLowSignalRejection(event) ? null : event;
+  },
+});

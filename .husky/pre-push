@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -e
+
+echo "Running the Docker phases (db, origin, stack)..."
+bun run ci --docker-only

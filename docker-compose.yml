@@ -1,0 +1,247 @@
+x-logging: &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: qafiyah-db
+    restart: unless-stopped
+    stop_grace_period: 60s
+    <<: *default-logging
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    command:
+      [
+        "postgres",
+        "-c",
+        "random_page_cost=1.1",
+        "-c",
+        "shared_preload_libraries=pg_stat_statements",
+        "-c",
+        "pg_stat_statements.track=all",
+      ]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-qafiyah}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required (set it in .env)}
+      POSTGRES_DB: ${POSTGRES_DB:-qafiyah}
+      PG_READER_PASSWORD: ${PG_READER_PASSWORD:?PG_READER_PASSWORD is required (set it in .env)}
+      PG_ACCOUNTS_PASSWORD: ${PG_ACCOUNTS_PASSWORD:?PG_ACCOUNTS_PASSWORD is required (set it in .env)}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+      - ./data/db:/dumps:ro
+      - ./scripts/db/sql:/docker-entrypoint-initdb.d/sql:ro
+      - ./scripts/db/init.sh:/docker-entrypoint-initdb.d/10-restore.sh:ro
+      - ./scripts/db/accounts-init.sh:/docker-entrypoint-initdb.d/20-accounts.sh:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h localhost -U ${POSTGRES_USER:-qafiyah} -d ${POSTGRES_DB:-qafiyah}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 300s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    stop_grace_period: 30s
+    <<: *default-logging
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      search-indexer:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://qafiyah_api:${PG_READER_PASSWORD:?PG_READER_PASSWORD is required (set it in .env)}@db:5432/${POSTGRES_DB:-qafiyah}
+      DATABASE_URL_ACCOUNTS: postgresql://qafiyah_accounts:${PG_ACCOUNTS_PASSWORD:?PG_ACCOUNTS_PASSWORD is required (set it in .env)}@db:5432/qafiyah_accounts
+      ELASTICSEARCH_URL: http://qafiyah_api:${ES_READER_PASSWORD:?ES_READER_PASSWORD is required (set it in .env)}@elasticsearch:9200
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SENTRY_DSN: ${SENTRY_DSN_API:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      PORT: "8787"
+      API_KEY_INTERNAL: ${API_KEY_INTERNAL:-}
+      API_KEY_FULL: ${API_KEY_FULL:-}
+      ANON_REQUESTS: ${ANON_REQUESTS:-}
+    networks:
+      default:
+      backend:
+        aliases:
+          - api-backend
+    expose:
+      - "8787"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      secrets:
+        - sentry_auth_token
+      args:
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+    restart: unless-stopped
+    stop_grace_period: 30s
+    <<: *default-logging
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    environment:
+      INTERNAL_API_URL: http://api-backend:8787
+      INTERNAL_API_KEY: ${API_KEY_INTERNAL:-}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
+      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
+      OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID:-}
+      OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-}
+      SESSION_STATE_SECRET: ${SESSION_STATE_SECRET:-}
+    networks:
+      default:
+      edge:
+        aliases:
+          - web-edge
+      backend:
+    expose:
+      - "8080"
+
+  edge-gateway:
+    image: owasp/modsecurity-crs:4.26.0-nginx-alpine-202605200705
+    container_name: qafiyah-edge-gateway
+    restart: unless-stopped
+    <<: *default-logging
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - ./apps/edge-gateway/proxy_backend.conf.template:/etc/nginx/templates/includes/proxy_backend.conf.template:ro
+    environment:
+      BACKEND: http://web-edge:8080
+      PORT: "8080"
+      SERVER_NAME: qafiyah.com
+      NGINX_ALWAYS_TLS_REDIRECT: "off"
+      REAL_IP_HEADER: CF-Connecting-IP
+      SET_REAL_IP_FROM: 172.28.0.1
+      MODSEC_RULE_ENGINE: DetectionOnly
+      BLOCKING_PARANOIA: "1"
+      ANOMALY_INBOUND: "5"
+      MODSEC_REQ_BODY_NOFILES_LIMIT: "16384"
+      MODSEC_REQ_BODY_LIMIT: "65536"
+    networks:
+      - edge
+    ports:
+      - "127.0.0.1:80:8080"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.2
+    container_name: qafiyah-es
+    restart: unless-stopped
+    stop_grace_period: 60s
+    <<: *default-logging
+    mem_limit: 1536m
+    mem_reservation: 768m
+    cpus: 1.0
+    pids_limit: 4096
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required (set it in .env)}
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ingest.geoip.downloader.enabled: "false"
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'curl -fsS -u "elastic:$$ELASTIC_PASSWORD" ''http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s'' || exit 1',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  search-indexer:
+    build:
+      context: .
+      dockerfile: apps/search-indexer/Dockerfile
+    container_name: qafiyah-search-indexer
+    restart: "no"
+    <<: *default-logging
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://qafiyah_api:${PG_READER_PASSWORD:?PG_READER_PASSWORD is required (set it in .env)}@db:5432/${POSTGRES_DB:-qafiyah}
+      ELASTICSEARCH_URL: http://elastic:${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required (set it in .env)}@elasticsearch:9200
+      ES_READER_PASSWORD: ${ES_READER_PASSWORD:?ES_READER_PASSWORD is required (set it in .env)}
+
+volumes:
+  db_data:
+    name: qafiyah-db-data
+  es_data:
+    name: qafiyah-es-data
+
+networks:
+  default:
+  edge:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  backend:
+    ipam:
+      config:
+        - subnet: 172.27.0.0/24
+
+secrets:
+  sentry_auth_token:
+    environment: SENTRY_AUTH_TOKEN
