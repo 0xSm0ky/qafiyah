@@ -119,8 +119,12 @@ export async function fetchRandomPoemSlugWithRetry(
     headers,
   } = options;
 
+  const startedAt = Date.now();
   const deadline = AbortSignal.timeout(totalBudgetMs);
-  const attemptSignal = () => AbortSignal.any([deadline, AbortSignal.timeout(attemptTimeoutMs)]);
+  const attemptSignal = () =>
+    AbortSignal.timeout(
+      Math.max(0, Math.min(attemptTimeoutMs, totalBudgetMs - (Date.now() - startedAt)))
+    );
 
   let result = await fetchRandomPoemSlug(baseUrl, attemptSignal(), headers);
   for (let attempt = 1; attempt < attempts && result.isErr() && !deadline.aborted; attempt++) {

@@ -263,4 +263,32 @@ describe('fetchRandomPoemSlugWithRetry timeout and budget', () => {
     expect(elapsed).toBeGreaterThanOrEqual(190);
     expect(elapsed).toBeLessThan(450);
   });
+
+  it('cuts an in-flight attempt short when the total budget runs out first', async () => {
+    const startedAt = Date.now();
+    const { mock } = stubFetchSteps([hang()]);
+    const result = await fetchRandomPoemSlugWithRetry(BASE, {
+      attempts: 3,
+      attemptTimeoutMs: 5000,
+      totalBudgetMs: 100,
+      backoffBaseMs: 5,
+    });
+    const elapsed = Date.now() - startedAt;
+    expect(result._unsafeUnwrapErr().kind).toBe('network');
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(elapsed).toBeGreaterThanOrEqual(90);
+    expect(elapsed).toBeLessThan(1000);
+  });
+
+  it('works in browsers without AbortSignal.any (Chrome before 116, Safari before 17.4)', async () => {
+    const any = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
+    Reflect.deleteProperty(AbortSignal, 'any');
+    try {
+      stubFetchSteps([ok('abcd')]);
+      const result = await fetchRandomPoemSlugWithRetry(BASE, FAST);
+      expect(result._unsafeUnwrap()).toBe('abcd');
+    } finally {
+      if (any) Object.defineProperty(AbortSignal, 'any', any);
+    }
+  });
 });
