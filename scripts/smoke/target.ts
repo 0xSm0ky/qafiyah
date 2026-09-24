@@ -27,13 +27,13 @@ function resolveApiKey(): string | undefined {
 
 export const API_KEY = resolveApiKey();
 
-function parseConcurrency(): number {
+function parseConcurrency(fallback: number): number {
   const raw = process.env['SMOKE_CONCURRENCY'];
   const n = raw ? Number(raw) : Number.NaN;
-  return Number.isInteger(n) && n > 0 ? Math.min(n, 64) : 8;
+  return Number.isInteger(n) && n > 0 ? Math.min(n, 64) : fallback;
 }
 
-export const CONCURRENCY = SURFACE.name === 'prod' && !API_KEY ? 1 : parseConcurrency();
+export const CONCURRENCY = parseConcurrency(SURFACE.name === 'prod' ? 1 : 8);
 
 export const POEMS_LIST = `${API}${API_V1_PREFIX}/poems`;
 export const RANDOM_POEM = `${API}${API_V1_PREFIX}/poems/random`;
