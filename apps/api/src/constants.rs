@@ -58,7 +58,7 @@ pub const LLMS_CACHE_CONTROL: &str = "public, max-age=3600";
 pub const ROBOTS_CACHE_CONTROL: &str = "public, max-age=86400";
 pub const SECURITY_CACHE_CONTROL: &str = "public, max-age=86400";
 pub const NO_STORE_CACHE_CONTROL: &str = "no-store";
-pub const READ_CACHE_CONTROL: &str = "public, max-age=300, stale-while-revalidate=86400";
+pub const READ_CACHE_CONTROL: &str = "private, max-age=300, stale-while-revalidate=86400";
 pub const UNKNOWN_ENVIRONMENT: &str = "unknown";
 pub const ES_SEARCH_TIMEOUT_SECONDS: u64 = 5;
 pub const PG_STATEMENT_TIMEOUT_SECONDS: u64 = 5;

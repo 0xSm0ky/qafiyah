@@ -29,8 +29,11 @@ Production secrets live encrypted in `secrets/prod.enc.env` and reach the VPS as
 
 The API serves **identical response bodies to every caller**. There is no capped
 data, no scope, and no `Vary: x-api-key`. The only thing that varies is how many
-requests per hour a caller gets, so a shared cache can serve one entry to
-everyone.
+requests per hour a caller gets, carried in each response's `X-RateLimit-*`
+headers. That is why JSON reads are `Cache-Control: private, max-age=300`: the
+caller's own browser may reuse a response for five minutes, but no shared cache
+(Cloudflare, nginx) may store one, since it would hand one caller's counters to
+the next and let cached hits skip the count.
 
 Anonymous callers share a per-IP hourly bucket. Keyed callers get their own
 bucket and their own number. Exceeding either returns `429` as

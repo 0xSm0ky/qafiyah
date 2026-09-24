@@ -318,7 +318,7 @@ async fn every_json_success_carries_the_read_cache_policy_and_a_matching_conditi
     let etag = first.header("etag").expect("etag").to_string();
     assert_eq!(
         first.header("cache-control"),
-        Some("public, max-age=300, stale-while-revalidate=86400")
+        Some("private, max-age=300, stale-while-revalidate=86400")
     );
     let request = axum::http::Request::builder()
         .uri("/v1/meters")

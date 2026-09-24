@@ -23,6 +23,16 @@ async fn a_json_success_is_stamped_with_a_weak_etag_and_the_read_policy() {
 }
 
 #[tokio::test]
+async fn a_json_success_is_cacheable_only_by_the_callers_own_browser() {
+    let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
+    let sent = send(app_with(&es), request("GET", "/v1/openapi.json")).await;
+    assert_eq!(
+        sent.header("cache-control"),
+        Some("private, max-age=300, stale-while-revalidate=86400")
+    );
+}
+
+#[tokio::test]
 async fn a_matching_validator_yields_not_modified_with_no_body() {
     let es = FakeEs::serving(StatusCode::OK, empty_hits()).await;
     let first = send(app_with(&es), request("GET", "/v1/openapi.json")).await;

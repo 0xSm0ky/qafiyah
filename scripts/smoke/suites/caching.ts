@@ -17,9 +17,9 @@ export const cachingProbes: readonly Probe[] = [
   },
   {
     url: `${API}/v1/poems`,
-    note: 'api json carries an etag',
+    note: 'api json carries an etag and is cacheable only by the caller',
     expect: 'ok',
-    checks: [headerPresent('ETag')],
+    checks: [headerPresent('ETag'), headerIncludes('Cache-Control', 'private')],
     surfaces: ALL,
   },
   {

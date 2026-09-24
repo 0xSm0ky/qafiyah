@@ -40,10 +40,10 @@ export const rateLimitProbes: readonly Probe[] = [
   {
     url: POEMS_LIST,
     expect: 'ok',
-    note: 'unkeyed /v1/poems returns the same full page, publicly cacheable',
+    note: 'unkeyed /v1/poems returns the same full page, cacheable only by the caller',
     prodOnly: true,
     unkeyed: true,
-    check: allChecks(expectRealPage, headerIncludes('Cache-Control', 'public')),
+    check: allChecks(expectRealPage, headerIncludes('Cache-Control', 'private')),
   },
   {
     url: POEMS_LIST,

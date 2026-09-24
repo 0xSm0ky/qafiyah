@@ -610,7 +610,7 @@ The API is not just a thin DB connector, and the crate carries no doc comments: 
 
 - **What:** denied at the edge, guarded by `API_KEY_INTERNAL` alone, and merged outside both the `cached` and `limited` routers, with `no-store` on every response.
 - **Where:** `apps/web/nginx.conf` (404 for `^~ /account` on `api.qafiyah.com`), `apps/api/src/routes/account.rs::guard`, `apps/api/src/auth.rs::Keys::is_internal`
-- **Why:** `guard` accepts only what `Keys::is_internal` matches, so neither a user's own API key nor `API_KEY_FULL` opens it, even though both bypass the limiter on `/v1`. Staying outside `cached` means `cache::layer` never stamps `public, max-age=300` on a session payload. Any one of the three would usually be enough; the point is that a mistake in one is survivable, because a shared-cache hit is served without ever reaching the origin.
+- **Why:** `guard` accepts only what `Keys::is_internal` matches, so neither a user's own API key nor `API_KEY_FULL` opens it, even though both bypass the limiter on `/v1`. Staying outside `cached` means `cache::layer` never stamps `private, max-age=300` on a session payload. Any one of the three would usually be enough; the point is that a mistake in one is survivable, because a shared-cache hit is served without ever reaching the origin.
 - **Normal approach:** a single auth middleware on the routes.
 - **Date:** 2026-09-21
 
