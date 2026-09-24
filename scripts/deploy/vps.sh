@@ -57,6 +57,25 @@ curl -fsS -H 'Host: qafiyah.com'     http://127.0.0.1:80/healthz -o /dev/null &&
 curl -fsS -H 'Host: api.qafiyah.com' http://127.0.0.1:80/healthz -o /dev/null && echo "  api  /healthz    ok"
 
 echo ""
+echo "→ purging the Cloudflare cache (cached pages still point at the previous build's scripts)"
+zone_id=$(grep -E '^CLOUDFLARE_ZONE_ID=' .env | cut -d= -f2- || true)
+purge_token=$(grep -E '^CLOUDFLARE_CACHE_PURGE_TOKEN=' .env | cut -d= -f2- || true)
+purge_result=""
+if [ -n "$zone_id" ] && [ -n "$purge_token" ]; then
+  purge_result=$(curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${zone_id}/purge_cache" \
+    -H "Authorization: Bearer ${purge_token}" -H 'Content-Type: application/json' \
+    --data '{"purge_everything":true}' || true)
+fi
+case "$purge_result" in
+  *'"success":true'*) echo "  cloudflare cache purged" ;;
+  *)
+    echo "✗ Cloudflare purge failed: purge everything in the Cloudflare dashboard now, or cached pages will load scripts this build no longer has" >&2
+    echo "  response: ${purge_result:-none (CLOUDFLARE_ZONE_ID or CLOUDFLARE_CACHE_PURGE_TOKEN missing from .env)}" >&2
+    exit 1
+    ;;
+esac
+
+echo ""
 echo "=== prod status ==="
 docker compose ps
 echo ""

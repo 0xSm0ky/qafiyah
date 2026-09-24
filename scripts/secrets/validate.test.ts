@@ -26,6 +26,8 @@ const VALID_PROD = [
   'ACCOUNTS_BACKUP_R2_ENDPOINT=https://0123456789abcdef.r2.cloudflarestorage.com',
   'ACCOUNTS_BACKUP_R2_ACCESS_KEY_ID=r2-access-key-id-0007',
   'ACCOUNTS_BACKUP_R2_SECRET_ACCESS_KEY=r2-secret-access-key-08',
+  'CLOUDFLARE_ZONE_ID=0123456789abcdef0123456789abcdef',
+  'CLOUDFLARE_CACHE_PURGE_TOKEN=cloudflare-purge-token-09',
 ].join('\n');
 
 function withLine(base: string, key: string, value: string | undefined): string {
@@ -41,7 +43,7 @@ describe('checkDecryptedValues', () => {
   test('a key set twice is reported with both lines', () => {
     const text = `${VALID_PROD}\nAPI_KEY_FULL=${HEX_B}`;
     expect(checkDecryptedValues('prod', text, DUMP_DIRS)).toContain(
-      'API_KEY_FULL is set 2 times (lines 8, 19)'
+      'API_KEY_FULL is set 2 times (lines 8, 21)'
     );
   });
 

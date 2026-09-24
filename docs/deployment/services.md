@@ -22,6 +22,8 @@ Browser and server errors go to Sentry only from builds that carry a release: `b
 
 Each route sets `Cache-Control` from `apps/web/src/lib/server/cache.ts`: HTML is held one day at nginx (`s-maxage`) but only one minute in the browser (a deploy wipes nginx's cache, it cannot wipe a browser's), sitemaps five minutes, well-known files one day, and 404 and authenticated pages `no-store`. nginx (`proxy_cache`) honors it, collapses concurrent misses (`proxy_cache_lock`), and serves stale on upstream errors or during background refresh. New/edited poems appear within the TTL, no rebuild. nginx also canonicalizes URLs to the https apex (www→apex + trailing slashes), sets baseline security headers, gzips text, and serves `/_astro/` immutably.
 
+Cloudflare caches pages too, through a Cache Rule set in the dashboard (host `qafiyah.com`, path not starting with `/api/`, eligible for cache, Edge TTL from the origin's `Cache-Control`, bypassed when there is none), so `no-store` pages are never stored there. Cached pages reference the build's hashed `/_astro/` scripts, which the next deploy removes, so `bun run deploy` purges the whole Cloudflare cache once the new containers pass the edge check, using `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_CACHE_PURGE_TOKEN` from the prod secrets (a token that can only purge `qafiyah.com`'s cache). If the purge fails, the deploy exits non-zero with Cloudflare's response; purge everything in the dashboard by hand before anything else.
+
 ### Sitemap
 
 `/sitemap-index.xml` is generated on demand (poems sharded per `SITEMAP_POEMS_PER_SHARD` from `config.ts`, plus poets and collection landing pages) and cached like any route. `pages/robots.txt.ts` (rendered from `well-known/robots.web.txt`) references it.

@@ -60,6 +60,8 @@ export const KEY_SPECS: Readonly<Record<string, KeySpec>> = {
     format: 'text',
     isSecret: true,
   },
+  CLOUDFLARE_ZONE_ID: { presence: prodRequired, format: 'text', isSecret: false },
+  CLOUDFLARE_CACHE_PURGE_TOKEN: { presence: prodRequired, format: 'text', isSecret: true },
   CLOUDFLARE_API_TOKEN: { presence: devOptional, format: 'text', isSecret: true },
 };
 

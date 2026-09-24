@@ -758,7 +758,7 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 
 - **What:** `htmlCacheControl` keeps the browser's cache short and nginx's edge cache long.
 - **Where:** `lib/server/cache.ts`, `apps/web/astro.config.mjs`
-- **Why:** a deploy can't purge browser caches but wipes nginx's. `build.inlineStylesheets: 'always'` means CSS ships inside that same HTML, so this cache also gates how fast style changes reach visitors.
+- **Why:** a deploy can't purge browser caches but wipes nginx's and purges Cloudflare's. `build.inlineStylesheets: 'always'` means CSS ships inside that same HTML, so this cache also gates how fast style changes reach visitors.
 - **Normal approach:** one `max-age` for browser and proxy.
 - **Date:** 2026-09-15
 

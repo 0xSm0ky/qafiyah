@@ -26,7 +26,7 @@ Then:
 bun run deploy        # scripts/deploy/vps.sh
 ```
 
-This builds, then does a zero-downtime rolling replace of `api`/`web`, then smoke-gates and prunes build cache, see `docs/deployment/architecture.md` for what it does internally. `bun` is not installed on the host; this always runs from your dev machine.
+This builds, then does a zero-downtime rolling replace of `api`/`web`, then smoke-gates, purges the Cloudflare cache (a failed purge exits non-zero: purge everything in the Cloudflare dashboard right away), and prunes build cache, see `docs/deployment/architecture.md` for what it does internally. `bun` is not installed on the host; this always runs from your dev machine.
 
 **Verify after it finishes:**
 
