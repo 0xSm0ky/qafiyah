@@ -135,7 +135,7 @@ Report bugs and ideas in [GitHub issues](https://github.com/raaqimorg/qafiyah/is
 
 ## Contact
 
-Qafiyah is maintained by [Raaqim](https://raaqim.org), an open-source organization behind several Arabic-language projects, together with its contributors. The site's [about page](https://qafiyah.com/about) tells the story. To reach us, chat on [Telegram](https://t.me/qafiyahx), or write to the address that fits below; API and data requests have their own addresses in the sections above.
+Qafiyah is maintained by [Raaqim](https://raaqim.org), an open-source organization behind several Arabic-language projects, together with its contributors. The site's [about page](https://qafiyah.com/about) tells the story. To reach us, write to the address that fits below; API and data requests have their own addresses in the sections above.
 
 | For                                                              | Write to             |
 | ---------------------------------------------------------------- | -------------------- |
@@ -143,6 +143,8 @@ Qafiyah is maintained by [Raaqim](https://raaqim.org), an open-source organizati
 | Problems with the site or the data                               | issues@qafiyah.com   |
 | Security reports, kept private ([policy](.github/SECURITY.md))   | security@qafiyah.com |
 | Conduct concerns ([code of conduct](.github/CODE_OF_CONDUCT.md)) | conduct@qafiyah.com  |
+
+<sub>We are also on [Telegram](https://t.me/qafiyahx).</sub>
 
 ## License
 
