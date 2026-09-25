@@ -113,7 +113,7 @@ Report bugs and ideas in [GitHub issues](https://github.com/raaqimorg/qafiyah/is
 <summary><b>What <code>bun run ci</code> checks</b></summary>
 <br>
 
-[`scripts/ci.ts`](scripts/ci.ts) runs lint and format, type and repo checks, unit tests, and contract snapshots (OpenAPI, the generated client, Elasticsearch queries), then, with Docker, database-backed tests and smoke tests against the built stack. The pre-commit hook runs it without Docker, the pre-push hook runs the Docker phase, and GitHub Actions runs `bun run ci --no-docker` plus gitleaks on every push and pull request. Clippy denies `unwrap`, `expect`, `panic`, indexing, and lossy casts in production code. More in [`docs/testing.md`](docs/testing.md).
+[`scripts/ci.ts`](scripts/ci.ts) runs lint and format, type and repo checks, unit tests, and contract snapshots (OpenAPI, the generated client, Elasticsearch queries), then, with Docker, database-backed tests and smoke tests against the built stack. The pre-commit hook checks only the staged files, the pre-push hook runs the gate without Docker, and GitHub Actions runs the whole gate, Docker phases included, plus gitleaks on every push and pull request. Clippy denies `unwrap`, `expect`, `panic`, indexing, and lossy casts in production code. More in [`docs/testing.md`](docs/testing.md).
 
 </details>
 

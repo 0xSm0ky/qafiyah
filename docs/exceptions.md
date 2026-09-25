@@ -18,12 +18,12 @@ Each entry:
 
 Departures not yet approved, found by a full scan on 2026-09-24 and ordered from most to least concerning. These entries use **Why it's unusual** and **Status** in place of **Why** and **Date**. Once reviewed, a justified entry moves into its component section below with a **Why** and **Date**, and any other gets a plan to replace it.
 
-### The quality gate is a custom runner, and its Docker phases run only locally
+### The quality gate is a custom runner
 
-- **What:** the gate is `scripts/ci.ts` (a 334-line orchestrator with phases, a worker pool, and output scrubbing). GitHub Actions runs it with `--no-docker` on every push and PR; the Docker phases (database-backed tests, dev and stack smoke) run only from the pre-push hook.
-- **Where:** `scripts/ci.ts`, `scripts/ci/phases.ts`, `.husky/pre-commit`, `.husky/pre-push`, `.github/workflows/ci.yml`, `docs/development.md`, `docs/topology.md`
-- **Why it's unusual:** the runner re-does turbo's parallelism and log prefixing, then filters turbo's banners with a hard-coded prefix list. The database-backed tests and smoke runs never run on GitHub, so a PR can still merge without them, and `HUSKY=0` (documented) skips them locally. The pre-commit hook runs the whole non-Docker gate on every commit and also deletes `.DS_Store` files across the tree, even though `.gitignore` covers them.
-- **Normal approach:** the gate runs as GitHub Actions jobs with required status checks (static, TypeScript, Rust, Docker smoke). Root tasks become turbo tasks, and hooks stay fast (lint-staged on changed files).
+- **What:** the gate is `scripts/ci.ts` (a 334-line orchestrator with phases, a worker pool, and output scrubbing). GitHub Actions runs it on every push and PR, the non-Docker phases in one job and each Docker phase in its own (`--phase db`, `origin`, `stack`).
+- **Where:** `scripts/ci.ts`, `scripts/ci/phases.ts`, `.github/workflows/ci.yml`
+- **Why it's unusual:** the runner re-does turbo's parallelism and log prefixing, then filters turbo's banners with a hard-coded prefix list.
+- **Normal approach:** root tasks become turbo tasks, and the workflow calls them directly as separate jobs.
 - **Status:** Needs review
 
 ### Full database dumps are committed to git under a homemade key scheme
@@ -118,7 +118,7 @@ Departures not yet approved, found by a full scan on 2026-09-24 and ordered from
 
 - **What:** `scripts/dev/run.ts` (560 lines) starts cargo, turbo, astro, and the inspector. It decides readiness and status by regex-matching their stdout, the API's JSON log fields, and `resolve-dump.sh`'s stderr.
 - **Where:** `scripts/dev/run.ts`, `scripts/dev/clean.sh`, `scripts/smoke/run.ts`, `apps/web/package.json` (`dev`)
-- **Why it's unusual:** startup depends on the exact wording of other programs' output (Astro's "Local" banner, turbo's banners, shell log lines, and field names in `apps/api/src/log.rs`), so a reworded line silently breaks `dev`, the smoke phase, and the gate. Leftovers are killed with `pkill -f "${ROOT}.*astro"`. By code reading, the pre-push smoke run ends by stopping the shared `qafiyah-dev` project, which also takes down a dev stack the developer started themselves.
+- **Why it's unusual:** startup depends on the exact wording of other programs' output (Astro's "Local" banner, turbo's banners, shell log lines, and field names in `apps/api/src/log.rs`), so a reworded line silently breaks `dev`, the smoke phase, and the gate. Leftovers are killed with `pkill -f "${ROOT}.*astro"`. By code reading, a local `bun run ci` smoke run ends by stopping the shared `qafiyah-dev` project, which also takes down a dev stack the developer started themselves.
 - **Normal approach:** a `dev` script in `apps/api/package.json` (`cargo watch -x run`) supervised by `turbo run dev`, or `docker compose watch`, with readiness checked through `/healthz`.
 - **Status:** Needs review
 

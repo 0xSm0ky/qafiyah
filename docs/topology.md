@@ -112,9 +112,9 @@ Conventions: `docs/code-conventions.md`, `docs/typescript-conventions.md`,
 
 ## CI/CD topology
 
-- **Every push and PR to `main`** (`.github/workflows/ci.yml`): the gate without its Docker phases, `bun run ci --no-docker` (static checks, types and repo checks, TypeScript and Rust tests, clippy, and the contract snapshots). The Docker phases (database-backed tests and the dev and stack smoke) run only locally, through the pre-push hook. `.github/workflows/gitleaks.yml` scans every push and PR for committed secrets.
+- **Every push and PR to `main`** (`.github/workflows/ci.yml`): the whole gate, as parallel jobs: `bun run ci --no-docker` (static checks, types and repo checks, TypeScript and Rust tests, clippy, and the contract snapshots), plus one job per Docker phase (`--phase db`, `origin`, and `stack`: the database-backed tests and the dev and stack smoke). They run on the committed 100-poem sample, so they need no secrets. `.github/workflows/gitleaks.yml` scans every push and PR for committed secrets.
 - **Docker images are built on demand** (`.github/workflows/images.yml`, `workflow_dispatch`): one matrix job per service, build-only, nothing is pushed to a registry. Locally, `bun run build:images` builds the same images on their own; `bun run ci` builds them as part of the stack smoke.
-- **Merging to `main` does not deploy.** Production deploy is a separate, manual, ordered step (`bun run deploy`, runbook in `.claude/skills/deploy/SKILL.md`): it SSHes to the VPS, rebuilds images from source there, and rolls `api`/`web` with zero downtime. See `docs/deployment/README.md`.
+- **Merging to `main` does not deploy.** Production deploy is a separate, manual, ordered step (`bun run deploy`, runbook in `.claude/skills/deploy/SKILL.md`) that refuses a commit whose CI run on `main` did not pass: it SSHes to the VPS, rebuilds images from source there, and rolls `api`/`web` with zero downtime. See `docs/deployment/README.md`.
 
 ## External services
 

@@ -111,9 +111,9 @@ value must have. `bun run secrets:check` enforces it:
 
 It runs after every `secrets:edit` (an invalid save reopens the editor), in
 `dump:key:set`, before `secrets:pull` writes the dev `.env`, and in `bun run ci`,
-which the pre-commit hook runs. The VPS does not run it, so it needs no Bun,
-which is fine: only files that passed the local gate before merging reach
-`origin/main`.
+which the pre-push hook and GitHub Actions run. The VPS does not run it, so it
+needs no Bun, which is fine: `bun run deploy` only ships a commit whose GitHub CI
+run passed.
 
 The apps check again at startup, so a hand-run `docker compose` with a broken
 `.env` still fails closed: in production the API exits without

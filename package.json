@@ -78,6 +78,7 @@
     "husky": "^9.1.7",
     "knip": "^6.37.0",
     "libpg-query": "18.1.5",
+    "lint-staged": "17.5.1",
     "neverthrow": "^8.2.0",
     "openapi-typescript": "7.13.0",
     "oxfmt": "0.70.0",
@@ -125,5 +126,12 @@
   "trustedDependencies": [
     "esbuild",
     "workerd"
-  ]
+  ],
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "oxlint --type-aware --deny-warnings",
+    "*": "oxfmt --check --no-error-on-unmatched-pattern",
+    "*.astro": "prettier --check",
+    "*.rs": "rustfmt --check --edition 2024",
+    "*.sh": "shellcheck --severity=warning"
+  }
 }

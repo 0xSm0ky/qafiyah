@@ -26,7 +26,7 @@ Then:
 bun run deploy        # scripts/deploy/vps.sh
 ```
 
-This builds, then does a zero-downtime rolling replace of `api`/`web`, then smoke-gates, purges the Cloudflare cache (a failed purge exits non-zero: purge everything in the Cloudflare dashboard right away), and prunes build cache, see `docs/deployment/architecture.md` for what it does internally. `bun` is not installed on the host; this always runs from your dev machine.
+It first confirms the GitHub CI run for `origin/main` passed and refuses otherwise (still running, failed, or never ran); `bun run deploy --skip-ci-check` skips that in an emergency. This builds, then does a zero-downtime rolling replace of `api`/`web`, then smoke-gates, purges the Cloudflare cache (a failed purge exits non-zero: purge everything in the Cloudflare dashboard right away), and prunes build cache, see `docs/deployment/architecture.md` for what it does internally. `bun` is not installed on the host; this always runs from your dev machine.
 
 **Verify after it finishes:**
 
@@ -38,7 +38,7 @@ bun run api:conformance prod   # replays every documented API operation against 
 
 ## 2. Rolling back a bad deploy
 
-**There is no separate rollback script.** `bun run deploy` always syncs the host to the current tip of `origin/main` (`git reset --hard FETCH_HEAD`). A bad build is already fail-safe (the old replica keeps serving until the new one passes its healthcheck, so it can't half-ship). To undo a deploy that _did_ complete: revert or reset `main` to the last-good commit, then run `bun run deploy` again the same way. There is no faster path in this repo today.
+**There is no separate rollback script.** `bun run deploy` always syncs the host to the current tip of `origin/main` (`git reset --hard FETCH_HEAD`). A bad build is already fail-safe (the old replica keeps serving until the new one passes its healthcheck, so it can't half-ship). To undo a deploy that _did_ complete: revert or reset `main` to the last-good commit, then run `bun run deploy` again the same way, once CI passes on that commit (or with `--skip-ci-check` if it can't wait). There is no faster path in this repo today.
 
 ## 3. Ship a new Postgres/Elasticsearch dump to prod (release data)
 

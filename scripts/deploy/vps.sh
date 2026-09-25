@@ -3,6 +3,26 @@ set -euo pipefail
 
 source ./scripts/lib/remote.sh
 
+refuse() {
+  echo "✗ $1" >&2
+  exit 1
+}
+
+if [[ "${1:-}" == --skip-ci-check ]]; then
+  echo "⚠ skipping the GitHub CI check, deploying origin/main unverified"
+else
+  command -v gh >/dev/null || refuse "the GitHub CLI (gh) is needed to confirm CI passed; pass --skip-ci-check to deploy anyway"
+  target_sha="$(git ls-remote origin refs/heads/main | cut -f1)"
+  ci_state="$(gh run list --workflow ci.yml --commit "${target_sha}" --event push --limit 1 \
+    --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"' 2>/dev/null || true)"
+  case "${ci_state}" in
+    "completed success") echo "✓ GitHub CI passed for ${target_sha:0:7}" ;;
+    "" | "null null") refuse "no GitHub CI run found for origin/main (${target_sha:0:7}); push first and let it run" ;;
+    completed*) refuse "GitHub CI did not pass for ${target_sha:0:7} (${ci_state#completed }); fix main before deploying" ;;
+    *) refuse "GitHub CI is still running for ${target_sha:0:7}; deploy once it passes (gh run watch)" ;;
+  esac
+fi
+
 echo "→ Deploying origin/main to ${REMOTE_HOST} (zero-downtime) ..."
 
 remote_exec ./scripts/lib/reclaimable.sh ./scripts/lib/tag-db-container.sh <<'REMOTE'
