@@ -49,13 +49,14 @@ const STANDARD_METERS_ORDER: readonly string[] = [
   'alkhabab',
 ];
 
+const meterRank = (slug: string): number => STANDARD_METERS_ORDER.indexOf(slug);
+
 export function sortMeterOptions(options: readonly SelectOption[]): readonly SelectOption[] {
-  const rank = (slug: string): number => STANDARD_METERS_ORDER.indexOf(slug);
   const standard = options
-    .filter((option) => rank(option.value) !== -1)
-    .sort((a, b) => rank(a.value) - rank(b.value));
+    .filter((option) => meterRank(option.value) !== -1)
+    .sort((a, b) => meterRank(a.value) - meterRank(b.value));
   const rest = options
-    .filter((option) => rank(option.value) === -1)
+    .filter((option) => meterRank(option.value) === -1)
     .sort((a, b) => (b.poemsCount ?? 0) - (a.poemsCount ?? 0));
   return [...standard, ...rest];
 }
