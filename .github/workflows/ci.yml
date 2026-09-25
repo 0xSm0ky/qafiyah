@@ -58,3 +58,37 @@ jobs:
 
       - name: Gate (everything but the Docker phases)
         run: bun run ci --no-docker
+
+  docker:
+    name: Docker (${{ matrix.phase }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [db, origin, stack]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.14
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install the Rust toolchain
+        if: matrix.phase != 'stack'
+        run: rustup toolchain install
+
+      - name: Cache Rust builds
+        if: matrix.phase != 'stack'
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: docker-${{ matrix.phase }}
+
+      - name: Docker phase (runs on the committed 100-poem sample, no secrets)
+        run: bun run ci --phase ${{ matrix.phase }}
