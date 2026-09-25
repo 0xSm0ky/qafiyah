@@ -4,9 +4,9 @@ Versioned zip snapshots of poet avatar images, mirroring the `data/db/` director
 
 ## Open, passphrase on request
 
-These snapshots are public and carry the same MIT license as the rest of the repo, and every image
-in them is already served in the clear at `cdn.qafiyah.com/poets/<slug>/avatar.webp`. Nothing here
-is withheld; the zips are encrypted, not restricted.
+These snapshots are public and dedicated to the public domain under [CC0 1.0](../LICENSE), and
+every image in them is already served in the clear at `cdn.qafiyah.com/poets/<slug>/avatar.webp`.
+Nothing here is withheld; the zips are encrypted, not restricted.
 
 Why encrypt something that is open? Because a public git history cannot be edited after the fact.
 Once a plaintext zip of every avatar is pushed, every fork, clone, and mirror keeps it for good, and

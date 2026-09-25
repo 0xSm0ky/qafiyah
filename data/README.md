@@ -7,8 +7,9 @@ Versioned binary snapshots, split by kind into subdirectories:
 
 Both follow the same layout: `{category}/{sequence}_{DD}_{MM}_{YYYY}/`, encrypted `.enc` files committed, plaintext gitignored.
 
-Everything in here is public and carries the same MIT license as the rest of the repo. The
-`.enc` files are encrypted, not restricted. Why encrypt something that is open? Because a public
+Everything in here is public and dedicated to the public domain under [CC0 1.0](LICENSE),
+unlike the MIT-licensed code in the rest of the repo. The `.enc` files are encrypted, not
+restricted. Why encrypt something that is open? Because a public
 git history cannot be edited after the fact. Once a plaintext copy is pushed, every fork, clone,
 and mirror keeps it for good, and nothing the maintainers do afterwards can take it back. If a
 record ever has to come out, for whatever reason, it must be possible to remove it everywhere it

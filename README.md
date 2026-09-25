@@ -73,7 +73,7 @@ Postgres is the source of truth for poems, poets, and every taxonomy table. Elas
 - [`data/db/`](data/db/README.md): PostgreSQL custom-format dumps, committed in parts to stay under GitHub's file size limit. `bun run db:up` reassembles them.
 - [`data/avatars/`](data/avatars/README.md): zips of poet avatar images, mirroring the CDN.
 
-`data/db/0000_default/` is a plaintext 100-poem sample, and it is what `bun run dev` restores by default. Every other snapshot is encrypted. The data is still public and MIT licensed like the code; encryption only keeps it possible to withdraw a record later, since a plaintext file pushed to a public repo stays in every clone for good.
+`data/db/0000_default/` is a plaintext 100-poem sample, and it is what `bun run dev` restores by default. Every other snapshot is encrypted. The data is still public and dedicated to the public domain under CC0 1.0; encryption only keeps it possible to withdraw a record later, since a plaintext file pushed to a public repo stays in every clone for good.
 
 To get a passphrase, email dumps@qafiyah.com (database) or avatars@qafiyah.com (avatars) and say what you will use it for. You get it right away, with no vetting. More in [`data/README.md`](data/README.md).
 
@@ -159,7 +159,7 @@ Qafiyah is maintained by [Raaqim](https://raaqim.org), an open-source organizati
 
 ## License and credits
 
-The code, the documentation, and the data snapshots are released under the [MIT license](LICENSE).
+The code and the documentation are released under the [MIT license](LICENSE). The data (the poem catalog the site and API serve, and the database and avatar snapshots in `data/`) is dedicated to the public domain under [CC0 1.0](data/LICENSE).
 
 - [Amiri](https://github.com/aliftype/amiri), the typeface used across the site and bundled in `apps/web/public/fonts`, is used under the SIL Open Font License 1.1.
 - The code of conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1.

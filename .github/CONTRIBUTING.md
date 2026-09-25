@@ -27,5 +27,6 @@ Every commit carries an author email, and pushing publishes it. To make sure thi
 
 Details and limits: [`docs/development.md`](../docs/development.md) ("Committing").
 
-By contributing, you agree that your contributions will be licensed under the project's
-[MIT license](../LICENSE).
+By contributing, you agree that your code and documentation contributions will be licensed under
+the project's [MIT license](../LICENSE), and that your data contributions (poems, poets, and
+corrections to them) will be dedicated to the public domain under [CC0 1.0](../data/LICENSE).

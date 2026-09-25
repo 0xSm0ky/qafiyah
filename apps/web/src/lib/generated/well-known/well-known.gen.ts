@@ -73,7 +73,7 @@ export const LLMS_WEB_TEMPLATE = `# قافية (Qafiyah)
 ## More
 
 - [About]({SITE}/about): Project background, who maintains it, and how to contribute
-- [Source code]({API}/v1/go/github): MIT-licensed, on GitHub
+- [Source code]({API}/v1/go/github): MIT-licensed code and public-domain (CC0) data, on GitHub
 - [Sitemap]({SITE}/sitemap-index.xml): Full URL index
 `;
 

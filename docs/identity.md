@@ -32,7 +32,7 @@ several Arabic-language projects, together with its contributors.
 
 ## License
 
-[MIT](../LICENSE)
+Code and documentation: [MIT](../LICENSE). Data: public domain under [CC0 1.0](../data/LICENSE).
 
 ## Links
 

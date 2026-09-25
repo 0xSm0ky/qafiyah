@@ -4,7 +4,7 @@ PostgreSQL custom-format (`pg_dump -Fc`) snapshots of the `public` schema.
 
 ## Open, passphrase on request
 
-These dumps are public and carry the same MIT license as the rest of the repo.
+These dumps are public and dedicated to the public domain under [CC0 1.0](../LICENSE).
 They're encrypted, not restricted.
 
 Why encrypt something that is open? Because a public git history cannot be
