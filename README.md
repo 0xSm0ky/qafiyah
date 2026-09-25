@@ -148,7 +148,7 @@ Qafiyah is maintained by [Raaqim](https://raaqim.org), an open-source organizati
 
 ## License
 
-The code and documentation are released under the [MIT license](LICENSE). The data, meaning the poem catalog the site and API serve and the snapshots in `data/`, is dedicated to the public domain under [CC0 1.0](data/LICENSE). The site's typeface, [Amiri](https://github.com/aliftype/amiri), is used under the SIL Open Font License 1.1, the code of conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org) 2.1, and the edge gateway runs the stock `owasp/modsecurity-crs` nginx image.
+The code and documentation are released under the [MIT license](LICENSE). The data, meaning the poem catalog the site and API serve and the snapshots in `data/`, is dedicated to the public domain under [CC0 1.0](data/LICENSE). The site's typeface, [Amiri](https://github.com/aliftype/amiri), is used under the [SIL Open Font License 1.1](apps/web/public/fonts/OFL.txt), the code of conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org) 2.1, and the edge gateway runs the stock `owasp/modsecurity-crs` nginx image.
 
 <br>
 
