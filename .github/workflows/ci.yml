@@ -90,5 +90,16 @@ jobs:
         with:
           key: docker-${{ matrix.phase }}
 
+      - name: Warm the dev stack so the smoke's startup wait covers only startup
+        if: matrix.phase == 'origin'
+        run: |
+          bun run db:up
+          ./scripts/dev/compose.sh run --rm --no-deps search-indexer
+          cargo build -p qafiyah-api
+
       - name: Docker phase (runs on the committed 100-poem sample, no secrets)
         run: bun run ci --phase ${{ matrix.phase }}
+
+      - name: Show the dev server log
+        if: failure() && matrix.phase == 'origin'
+        run: cat /tmp/dev-server.log || true
