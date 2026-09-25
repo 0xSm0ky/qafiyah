@@ -3,7 +3,7 @@ set -e
 
 ./scripts/check/commit-identity.sh pre-commit
 
-find . -type d \( -name node_modules -o -name .git \) -prune -o -type f -name '.DS_Store' -print -delete
+find . -type d \( -name node_modules -o -name .git \) -prune -o -type f -name '.DS_Store' -print -exec rm -f {} +
 git rm --cached --quiet --ignore-unmatch '*.DS_Store' '**/.DS_Store' >/dev/null 2>&1 || true
 
 echo "Running the local checks (Docker phases run on push)..."
