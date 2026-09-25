@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: npm
+  - package-ecosystem: bun
     directory: /
     schedule:
       interval: weekly
@@ -8,8 +8,6 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
-      include: scope
     groups:
       types:
         patterns:
@@ -26,21 +24,8 @@ updates:
     ignore:
       - dependency-name: "prettier-plugin-astro"
         versions: [">=1.0.0"]
-
-  - package-ecosystem: npm
-    directory: /apps/web
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "chore(deps,web)"
-      include: scope
-    groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
 
   - package-ecosystem: cargo
     directory: /
@@ -50,22 +35,6 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: "chore(deps,rust)"
-      include: scope
-    groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /apps/telemetry-proxy
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "chore(deps,telemetry-proxy)"
-      include: scope
     groups:
       minor-and-patch:
         update-types:

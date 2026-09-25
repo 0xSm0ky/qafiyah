@@ -42,12 +42,12 @@ Departures not yet approved, found by a full scan on 2026-09-24 and ordered from
 - **Normal approach:** CI builds on merge and pushes SHA-tagged images to GHCR, the VPS runs `docker compose pull` and `docker rollout` (or Kamal), and rollback redeploys the previous tag.
 - **Status:** Needs review
 
-### Dependabot treats the Bun workspace as npm and never updates images
+### Dependabot never updates Docker images
 
-- **What:** three `npm` entries point at one `bun.lock` workspace, and there is no `docker` or `docker-compose` entry.
+- **What:** `.github/dependabot.yml` has `bun`, `cargo`, and `github-actions` entries but no `docker` or `docker-compose` entry.
 - **Where:** `.github/dependabot.yml`
-- **Why it's unusual:** the npm updater does not touch `bun.lock`, so its PRs change only `package.json` (see `aee6e122`, `a10ea428`, `0813ad09`) and either fail `bun install --frozen-lockfile` or merge with a stale lockfile. Base images (`rust`, `alpine`, `oven/bun`, `postgres`, and the exact Elasticsearch and CRS tags) never get update PRs. Commit subjects read `chore(deps-dev)(deps-dev)` because the `prefix` already carries the scope and `include: scope` adds it again.
-- **Normal approach:** one `package-ecosystem: bun` entry at `/`, plus `docker` and `docker-compose` entries.
+- **Why it's unusual:** base images (`rust`, `alpine`, `oven/bun`, `postgres`, and the exact Elasticsearch and CRS tags) never get update PRs.
+- **Normal approach:** `docker` and `docker-compose` entries next to the existing ones.
 - **Status:** Needs review
 
 ### Dev stacks are documented as running on the production VPS
@@ -863,6 +863,14 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 - **Why:** 1.x silently stops `prettier-plugin-tailwindcss` from sorting classes in `.astro` files.
 - **Normal approach:** track the latest version.
 - **Date:** 2026-09-24
+
+### TypeScript stays on 6.x
+
+- **What:** `typescript` stays on 6.0.3 in `package.json` and `apps/web/package.json`, and Dependabot ignores 7.x.
+- **Where:** `package.json`, `apps/web/package.json`, `.github/dependabot.yml`
+- **Why:** TypeScript 7 is the native compiler and no longer ships the JavaScript API that `astro check` (`@astrojs/language-server` 2.16.10) calls, so `bun run types` crashes with `Cannot read properties of undefined (reading 'fileExists')`. Lift the ignore once Astro's checker supports 7.
+- **Normal approach:** track the latest version.
+- **Date:** 2026-09-25
 
 ### `posthog.astro` stays minified
 
