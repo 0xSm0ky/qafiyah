@@ -5,6 +5,7 @@ import { VERSES_NOUN_FORMS } from '@/lib/constants/taxonomy-data';
 import {
   type ArabicNounForms,
   formatArabicCount,
+  formatArabicNumber,
   NON_ARABIC_BASIC_REGEX,
   sanitizeArabicInput,
   stripInputNoise,
@@ -41,6 +42,19 @@ describe('toArabicDigits', () => {
 
   it('converts all ten digits', () => {
     expect(toArabicDigits('0123456789')).toBe('٠١٢٣٤٥٦٧٨٩');
+  });
+});
+
+describe('formatArabicNumber', () => {
+  test.each([
+    [0, '٠'],
+    [7, '٧'],
+    [999, '٩٩٩'],
+    [1338, '١٬٣٣٨'],
+    [39456, '٣٩٬٤٥٦'],
+    [1234567, '١٬٢٣٤٬٥٦٧'],
+  ])('renders %d in Arabic digits with the thousands separator', (value, expected) => {
+    expect(formatArabicNumber(value)).toBe(expected);
   });
 });
 
