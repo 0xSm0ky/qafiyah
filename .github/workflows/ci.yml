@@ -93,7 +93,7 @@ jobs:
       - name: Warm the dev stack so the smoke's startup wait covers only startup
         if: matrix.phase == 'origin'
         run: |
-          bun run db:up
+          ./scripts/dev/compose.sh up -d --wait db elasticsearch
           ./scripts/dev/compose.sh run --rm --no-deps search-indexer
           cargo build -p qafiyah-api
 
