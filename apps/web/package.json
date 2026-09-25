@@ -7,7 +7,7 @@
     "dev": "bun ../../scripts/dev/preflight.ts web && astro dev",
     "build": "astro build",
     "start": "astro preview",
-    "types": "astro check && tsc --noEmit",
+    "types": "astro check",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },

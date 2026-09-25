@@ -5,7 +5,7 @@ export type Task = { name: string; cmd: string[]; advisory?: boolean };
 export type Phase = {
   readonly name: string;
   readonly tasks: readonly Task[];
-  readonly kind: 'sequential' | 'parallel' | 'docker';
+  readonly kind: 'parallel' | 'docker';
 };
 
 export type PhaseSelection = {

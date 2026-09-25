@@ -80,6 +80,7 @@ async fn an_unparseable_path_segment_is_a_problem_document() {
 #[tokio::test]
 async fn every_contract_path_is_routed() {
     let es = es().await;
+    let mut sends = tokio::task::JoinSet::new();
     for path in [
         "/v1/meters",
         "/v1/meters/altawil",
@@ -103,7 +104,11 @@ async fn every_contract_path_is_routed() {
         "/v1/openapi.json",
         "/v1/docs",
     ] {
-        let sent = send(app_with(&es), request("GET", path)).await;
+        let app = app_with(&es);
+        sends.spawn(async move { (path, send(app, request("GET", path)).await) });
+    }
+    while let Some(joined) = sends.join_next().await {
+        let (path, sent) = joined.expect("a routing probe task never panics");
         assert_ne!(sent.status, StatusCode::NOT_FOUND, "{path} must be routed");
         assert_ne!(
             sent.status,

@@ -81,7 +81,7 @@ const CONTRACT: Task[] = [
 ];
 
 const PHASES: readonly Phase[] = [
-  { name: 'static', tasks: STATIC, kind: 'sequential' },
+  { name: 'static', tasks: STATIC, kind: 'parallel' },
   { name: 'checks', tasks: CHECKS, kind: 'parallel' },
   { name: 'unit', tasks: UNIT, kind: 'parallel' },
   { name: 'contract', tasks: CONTRACT, kind: 'parallel' },
@@ -307,11 +307,9 @@ if (phases.some((phase) => phase.kind === 'docker')) {
 
 const warnings: Result[] = [];
 for (const phase of phases) {
-  const label = { sequential: 'sequential', parallel: 'parallel', docker: 'docker (sequential)' }[
-    phase.kind
-  ];
+  const label = { parallel: 'parallel', docker: 'docker (sequential)' }[phase.kind];
   console.log(dim(`\n── ${phase.name} (${label}) ──`));
-  if (phase.kind === 'sequential' || phase.kind === 'docker') {
+  if (phase.kind === 'docker') {
     await runSequential([...phase.tasks]);
   } else {
     const concurrency = Number.isInteger(requestedConcurrency)

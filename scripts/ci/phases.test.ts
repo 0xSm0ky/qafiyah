@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { selectPhases, type Phase } from './phases';
 
 const PHASES: readonly Phase[] = [
-  { name: 'static', tasks: [], kind: 'sequential' },
+  { name: 'static', tasks: [], kind: 'parallel' },
   { name: 'checks', tasks: [], kind: 'parallel' },
   { name: 'db', tasks: [], kind: 'docker' },
   { name: 'stack', tasks: [], kind: 'docker' },
