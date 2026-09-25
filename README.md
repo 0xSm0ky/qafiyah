@@ -8,7 +8,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset=".github/readme_tagline_darkmode.svg">
     <source media="(prefers-color-scheme: light)" srcset=".github/readme_tagline_lightmode.svg">
-    <img alt="مرجع الشعر العربي, the Arabic poetry reference" src=".github/readme_tagline_lightmode.svg" width="560">
+    <img alt="مرجع الشعر العربي, the Arabic poetry reference" src=".github/readme_tagline_lightmode.svg" width="520">
   </picture>
 </p>
 
