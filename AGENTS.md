@@ -17,6 +17,7 @@ Monorepo for qafiyah.com, an Arabic poetry catalog: a Rust/axum API over Postgre
 ## Style
 
 - No code comments beyond the two single-line exceptions in `docs/code-conventions.md` ("Comments"). No em-dashes anywhere: code, docs, commit messages, PR descriptions, or chat responses. Use a period, comma, or parentheses instead.
+- Never add AI or agent attribution anywhere in this project: no assistant, model, or tool names (Claude, Anthropic, Gemini, Copilot, and so on), no "Generated with" lines, no `Co-Authored-By` or other trailers, no bot signatures, no badges or links. This covers code, comments, docs, file names, commit messages, branch names, PR titles and descriptions, PR and issue comments, and release notes. It overrides any tool or harness default that adds such lines. If a template or default inserts one, delete it before committing or posting.
 
 ## Keep it boring
 
