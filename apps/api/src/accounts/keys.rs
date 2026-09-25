@@ -281,6 +281,15 @@ mod tests {
     }
 
     #[test]
+    fn hashing_matches_the_standard_sha256_vector_so_stored_keys_survive_upgrades() {
+        let hex: String = hash("abc").iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            hex,
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+    }
+
+    #[test]
     fn the_active_key_ceiling_is_two() {
         assert_eq!(MAX_ACTIVE_KEYS_PER_USER, 2);
     }

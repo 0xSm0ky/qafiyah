@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 axum = "0.8"
-base64 = "0.22"
+base64 = "0.23"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
 sqlx = { version = "0.9", default-features = false, features = [
   "runtime-tokio",
@@ -27,7 +27,7 @@ utoipa-axum = "0.2.0"
 rand = "0.10"
 thiserror = "2"
 subtle = "2"
-sha2 = "0.10"
+sha2 = "0.11"
 sentry = { version = "0.49", default-features = false, features = [
   "backtrace",
   "contexts",

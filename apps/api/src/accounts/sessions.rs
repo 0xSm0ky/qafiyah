@@ -101,6 +101,19 @@ mod tests {
     }
 
     #[test]
+    fn a_known_id_keeps_its_cookie_value_and_stored_hash_so_live_sessions_survive_upgrades() {
+        let id = vec![0xfb_u8; SESSION_ID_BYTES];
+        let cookie = "-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_s";
+        assert_eq!(encode_id(&id), cookie);
+        assert_eq!(decode_id(cookie), Some(id.clone()));
+        let stored: String = hash_id(&id).iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            stored,
+            "456a04986c2572de19b058ef2ef20b0077017bcdb15819af052eb9d5d9b8e504"
+        );
+    }
+
+    #[test]
     fn a_malformed_cookie_value_decodes_to_nothing() {
         assert_eq!(decode_id("not base64url!!"), None);
         assert_eq!(decode_id(""), None);
