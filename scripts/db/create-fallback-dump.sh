@@ -10,7 +10,9 @@ if [[ -z "${newest_dir}" ]]; then
   exit 1
 fi
 
-echo "[create-fallback-dump] sampling ${POEM_COUNT} Jahili-era poems from ${newest_dir}..."
+fixture_poets="$(bun -e "import { SAMPLE_FIXTURE_POETS } from './scripts/smoke/fixtures'; console.log(SAMPLE_FIXTURE_POETS.map((poet) => poet.slug).join(','))")"
+
+echo "[create-fallback-dump] sampling ${POEM_COUNT} Jahili-era poems (fixture poets ${fixture_poets}, then one poem per poet) from ${newest_dir}..."
 
 container_name="qafiyah-fallback-scratch-$$"
 docker run -d --rm --name "${container_name}" \
@@ -53,7 +55,7 @@ echo "[create-fallback-dump] analyzing before sampling..."
 docker exec "${container_name}" psql -U postgres -d qafiyah -c 'ANALYZE;'
 
 docker cp scripts/db/sql/sample-dump.sql "${container_name}:/tmp/sample-dump.sql"
-docker exec "${container_name}" psql -v poem_count="${POEM_COUNT}" -U postgres -d qafiyah -f /tmp/sample-dump.sql
+docker exec "${container_name}" psql -v ON_ERROR_STOP=1 -v poem_count="${POEM_COUNT}" -v fixture_poets="${fixture_poets}" -U postgres -d qafiyah -f /tmp/sample-dump.sql
 
 echo "[create-fallback-dump] refreshing the taxonomy stats tables for the sampled corpus..."
 docker cp scripts/db/sql/refresh-taxonomy-stats.sql "${container_name}:/tmp/refresh-taxonomy-stats.sql"
@@ -67,4 +69,18 @@ docker exec "${container_name}" pg_dump -U postgres -d qafiyah \
 mkdir -p data/db/0000_default
 docker cp "${container_name}:/tmp/sample.dump" data/db/0000_default/qafiyah_public_sample.dump
 
-echo "[create-fallback-dump] wrote data/db/0000_default/qafiyah_public_sample.dump"
+docker exec -i "${container_name}" psql -v ON_ERROR_STOP=1 -v source="$(basename "${newest_dir}")" -U postgres -d qafiyah -At >data/db/0000_default/manifest.json <<'SQL'
+SELECT jsonb_pretty(jsonb_build_object(
+  'source', :'source',
+  'eras', (SELECT jsonb_agg(DISTINCT e.slug) FROM poems p JOIN eras e ON e.id = p.era_id),
+  'poets', (
+    SELECT jsonb_agg(jsonb_build_object(
+      'slug', pt.slug,
+      'poems', (SELECT jsonb_agg(p.slug ORDER BY p.id) FROM poems p WHERE p.poet_id = pt.id)
+    ) ORDER BY pt.slug)
+    FROM poets pt
+  )
+));
+SQL
+
+echo "[create-fallback-dump] wrote data/db/0000_default/qafiyah_public_sample.dump and manifest.json"

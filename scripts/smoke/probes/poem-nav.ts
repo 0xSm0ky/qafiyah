@@ -1,6 +1,7 @@
 import { err, ok, type Result } from 'neverthrow';
 
 import { parseJsonObject } from '../checks';
+import { FIXTURE_POET, ONE_POEM_FIXTURE_POET } from '../fixtures';
 import { POEM_DETAIL } from '../target';
 
 import type { BodyCheck, Probe } from '../types';
@@ -50,27 +51,30 @@ function expectPoemNav(expected: ExpectedNav): BodyCheck {
   };
 }
 
+const [first, second, middle, fourth, last] = FIXTURE_POET.poems;
+const [onlyPoem] = ONE_POEM_FIXTURE_POET.poems;
+
 export const poemNavProbes: readonly Probe[] = [
   {
-    url: POEM_DETAIL('UmlG'),
+    url: POEM_DETAIL(first),
     expect: 'ok',
     note: 'first poem by id for a multi-poem poet: no prev, has next',
-    check: expectPoemNav({ prev: null, next: 'pZhl' }),
+    check: expectPoemNav({ prev: null, next: second }),
   },
   {
-    url: POEM_DETAIL('pZhl'),
+    url: POEM_DETAIL(middle),
     expect: 'ok',
     note: 'a middle poem: both prev and next present',
-    check: expectPoemNav({ prev: 'UmlG', next: 'SOeo' }),
+    check: expectPoemNav({ prev: second, next: fourth }),
   },
   {
-    url: POEM_DETAIL('bIQB'),
+    url: POEM_DETAIL(last),
     expect: 'ok',
     note: 'last poem by id for a multi-poem poet: has prev, no next',
-    check: expectPoemNav({ prev: 'uNUx', next: null }),
+    check: expectPoemNav({ prev: fourth, next: null }),
   },
   {
-    url: POEM_DETAIL('rtNy'),
+    url: POEM_DETAIL(onlyPoem),
     expect: 'ok',
     note: 'a poet with exactly one poem: neither prev nor next',
     check: expectPoemNav({ prev: null, next: null }),

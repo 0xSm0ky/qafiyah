@@ -84,7 +84,7 @@ export const differentials: readonly Differential[] = [
   {
     note: 'unfiltered vs era-filtered poems (the era filter filters)',
     a: searchUrl({ q: QUERY_AR, types: ['poems'] }),
-    b: searchUrl({ q: QUERY_AR, types: ['poems'], eraSlugs: ['jahili'] }),
+    b: searchUrl({ q: QUERY_AR, types: ['poems'], eraSlugs: ['abbasi'] }),
     because: 'identical bytes mean eraSlugs never reached the ES query',
   },
   {

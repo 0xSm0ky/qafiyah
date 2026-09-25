@@ -26,6 +26,7 @@ import {
   TATWEEL_AR,
   ZWNJ_AR,
 } from '../checks';
+import { FIXTURE_POET } from '../fixtures';
 import { SEARCH } from '../target';
 
 import type { Probe } from '../types';
@@ -121,7 +122,7 @@ export const searchOkProbes: readonly Probe[] = [
   },
   { url: SEARCH, expect: 'ok', note: 'no params at all → defaults, both sections browse' },
   {
-    url: searchUrl({ q: QUERY_AR, types: ['poems'], poetSlugs: ['yoFB'] }),
+    url: searchUrl({ q: QUERY_AR, types: ['poems'], poetSlugs: [FIXTURE_POET.slug] }),
     expect: 'ok',
     note: 'poems filtered by poet',
   },

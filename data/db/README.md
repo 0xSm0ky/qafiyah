@@ -49,11 +49,21 @@ encrypted and needs no passphrase. It exists so `bun run dev` works
 immediately for anyone who hasn't been given a real dump's passphrase; see
 "Restore (local development)" below for how it gets picked.
 
-The 100 poems are all from the Jahili (pre-Islamic) era specifically, not a
-random slice of the corpus (the oldest era here), so it's a small,
-self-contained subset to ship in the clear. Every taxonomy table (eras,
-meters, rhymes, themes, etc.) stays fully intact regardless, they're category
-labels, not corpus content, and the UI's filters need the full set to work.
+The 100 poems are all from the Jahili (pre-Islamic) era, the oldest in the
+corpus, so it's a small, self-contained subset to ship in the clear. Every
+taxonomy table (eras, meters, rhymes, themes, etc.) stays fully intact
+regardless, they're category labels, not corpus content, and the UI's filters
+need the full set to work.
+
+The selection is fixed, not random, so the smoke tests pass without a
+passphrase: every poem of the fixture poets in `scripts/smoke/fixtures.ts`
+(the only real poems and poets the probes name), then the first poem of each
+other Jahili poet, in poet order, up to 100. `manifest.json` next to the dump
+lists what it holds, and `scripts/smoke/fixtures.test.ts` fails if the sample
+is missing a fixture or a probe hard-codes a real slug instead of using the
+fixtures. After changing the fixtures, regenerate both files with
+`scripts/db/create-fallback-dump.sh` (it restores the newest decrypted dump
+into a scratch Postgres, about seven minutes).
 
 ## Requirements
 

@@ -1,4 +1,5 @@
 import { ar, BIDI_OVERRIDE, POET_QUERY_AR, QUERY_AR } from '../checks';
+import { FIXTURE_POET } from '../fixtures';
 import { WEB } from '../target';
 
 import type { Probe } from '../types';
@@ -11,7 +12,7 @@ export const pageProbes: readonly Probe[] = [
   { url: `${WEB}/themes`, expect: 'ok', note: 'themes index' },
   { url: `${WEB}/themes/almutafarriqat`, expect: 'ok', note: 'theme detail' },
   { url: `${WEB}/collections/almuallaqat`, expect: 'ok', note: 'collection detail' },
-  { url: `${WEB}/poets/yoFB`, expect: 'ok', note: 'poet detail' },
+  { url: `${WEB}/poets/${FIXTURE_POET.slug}`, expect: 'ok', note: 'poet detail' },
 ];
 
 export const poetsSsrProbes: readonly Probe[] = [
@@ -19,7 +20,7 @@ export const poetsSsrProbes: readonly Probe[] = [
   { url: `${WEB}/poets?page=2`, expect: 'ok', note: 'page 2' },
   { url: `${WEB}/poets?page=3`, expect: 'ok', note: 'page 3' },
   { url: `${WEB}/poets?era=jahili`, expect: 'ok', note: 'era filter' },
-  { url: `${WEB}/poets?era=abbasi&page=2`, expect: 'ok', note: 'era + page' },
+  { url: `${WEB}/poets?era=jahili&page=2`, expect: 'ok', note: 'era + page' },
   { url: `${WEB}/poets?q=${ar(POET_QUERY_AR)}`, expect: 'ok', note: 'name search' },
   { url: `${WEB}/poets?era=jahili&q=${ar(QUERY_AR)}`, expect: 'ok', note: 'era + query combo' },
   { url: `${WEB}/poets?q=${ar('zzz')}`, expect: 'ok', note: 'non-Arabic query sanitized to empty' },

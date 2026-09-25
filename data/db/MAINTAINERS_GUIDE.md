@@ -36,6 +36,6 @@ Files at or under 45MB stay whole. Larger ones are split in place into `.dump.pa
 - [ ] Encrypt with a fresh, unique passphrase: `scripts/db/encrypt-dump.sh data/db/{new-dir}` (prompts unless `DUMP_KEY__{new-dir}` is set; refuses a passphrase another dump already uses, via `data/db/keys.manifest`; also encrypts `CHANGES.md` if present)
 - [ ] Store the passphrase: `bun run dump:key:set` writes it to `secrets/dev.enc.env`. Keep it somewhere durable too, passphrase requests arrive at dumps@qafiyah.com.
 - [ ] Restores cleanly: `bun run db:reset`, then `./scripts/dev/compose.sh exec db psql -U qafiyah -d qafiyah -c "SELECT count(*) FROM poems;"`
-- [ ] Regenerate the fallback sample from it: `scripts/db/create-fallback-dump.sh`
+- [ ] Regenerate the fallback sample and its `manifest.json` from it: `scripts/db/create-fallback-dump.sh`, then `bun test scripts/smoke/fixtures.test.ts`
 - [ ] Commit, adding only: `git add data/db/ && git commit -m "chore(db): add {new-dir} snapshot"`. Never rename or move an existing dump directory in the same commit (`data/README.md` explains the push failure that causes).
 - [ ] Ship it: add the passphrase to `secrets/prod.enc.env` as `DUMP_KEY__{new-dir}`, then run `bun run db:reseed`. A deploy keeps the data volume, so production only picks up a new dump this way (it restores the corpus database in place and rebuilds Elasticsearch, a few minutes of API downtime, accounts untouched). Ordered steps: `.claude/skills/deploy/SKILL.md`, step 3.

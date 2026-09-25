@@ -1,0 +1,588 @@
+{
+    "eras": [
+        "jahili"
+    ],
+    "poets": [
+        {
+            "slug": "AcCt",
+            "poems": [
+                "cSbN"
+            ]
+        },
+        {
+            "slug": "AmGT",
+            "poems": [
+                "jMVu"
+            ]
+        },
+        {
+            "slug": "Amly",
+            "poems": [
+                "hnli"
+            ]
+        },
+        {
+            "slug": "AzRJ",
+            "poems": [
+                "pDdK"
+            ]
+        },
+        {
+            "slug": "BDoj",
+            "poems": [
+                "NBII"
+            ]
+        },
+        {
+            "slug": "BKQD",
+            "poems": [
+                "KDCz"
+            ]
+        },
+        {
+            "slug": "BNsk",
+            "poems": [
+                "PkVC"
+            ]
+        },
+        {
+            "slug": "BVAn",
+            "poems": [
+                "PgyZ"
+            ]
+        },
+        {
+            "slug": "CWSh",
+            "poems": [
+                "CJOm"
+            ]
+        },
+        {
+            "slug": "Dktz",
+            "poems": [
+                "NWdc"
+            ]
+        },
+        {
+            "slug": "EgPB",
+            "poems": [
+                "EFoV"
+            ]
+        },
+        {
+            "slug": "FGQM",
+            "poems": [
+                "wMdi"
+            ]
+        },
+        {
+            "slug": "FVho",
+            "poems": [
+                "TbpF"
+            ]
+        },
+        {
+            "slug": "FzZx",
+            "poems": [
+                "VaWq"
+            ]
+        },
+        {
+            "slug": "GOjz",
+            "poems": [
+                "AHtR"
+            ]
+        },
+        {
+            "slug": "HSId",
+            "poems": [
+                "ZHdF"
+            ]
+        },
+        {
+            "slug": "HYTv",
+            "poems": [
+                "XBbW"
+            ]
+        },
+        {
+            "slug": "IBDU",
+            "poems": [
+                "wKbM",
+                "ROgG",
+                "mnCQ",
+                "uWro",
+                "OHjV"
+            ]
+        },
+        {
+            "slug": "IKTg",
+            "poems": [
+                "nKpg"
+            ]
+        },
+        {
+            "slug": "IREb",
+            "poems": [
+                "PJvV"
+            ]
+        },
+        {
+            "slug": "JWjq",
+            "poems": [
+                "BCVT"
+            ]
+        },
+        {
+            "slug": "JcVN",
+            "poems": [
+                "vDJZ"
+            ]
+        },
+        {
+            "slug": "KiBz",
+            "poems": [
+                "WTZO"
+            ]
+        },
+        {
+            "slug": "KtRO",
+            "poems": [
+                "WZVq"
+            ]
+        },
+        {
+            "slug": "LMcQ",
+            "poems": [
+                "ncZp"
+            ]
+        },
+        {
+            "slug": "LcNM",
+            "poems": [
+                "PcQD"
+            ]
+        },
+        {
+            "slug": "LdEV",
+            "poems": [
+                "PiOk"
+            ]
+        },
+        {
+            "slug": "LegP",
+            "poems": [
+                "jxne"
+            ]
+        },
+        {
+            "slug": "LxmQ",
+            "poems": [
+                "gvKj"
+            ]
+        },
+        {
+            "slug": "MgVm",
+            "poems": [
+                "mWVO"
+            ]
+        },
+        {
+            "slug": "MuuD",
+            "poems": [
+                "yuVQ"
+            ]
+        },
+        {
+            "slug": "NXbi",
+            "poems": [
+                "qTgn"
+            ]
+        },
+        {
+            "slug": "OQXS",
+            "poems": [
+                "dalP"
+            ]
+        },
+        {
+            "slug": "OlCD",
+            "poems": [
+                "Sgcn"
+            ]
+        },
+        {
+            "slug": "OlJY",
+            "poems": [
+                "Bfye"
+            ]
+        },
+        {
+            "slug": "PAKT",
+            "poems": [
+                "gnNg"
+            ]
+        },
+        {
+            "slug": "PGxq",
+            "poems": [
+                "fXKT"
+            ]
+        },
+        {
+            "slug": "QWke",
+            "poems": [
+                "OxLu"
+            ]
+        },
+        {
+            "slug": "QcyA",
+            "poems": [
+                "SDlj"
+            ]
+        },
+        {
+            "slug": "RAih",
+            "poems": [
+                "tEBZ"
+            ]
+        },
+        {
+            "slug": "RwgW",
+            "poems": [
+                "basx"
+            ]
+        },
+        {
+            "slug": "SACL",
+            "poems": [
+                "oQNF"
+            ]
+        },
+        {
+            "slug": "SiiV",
+            "poems": [
+                "krdS"
+            ]
+        },
+        {
+            "slug": "SrMh",
+            "poems": [
+                "JmHf"
+            ]
+        },
+        {
+            "slug": "UClk",
+            "poems": [
+                "LHbK"
+            ]
+        },
+        {
+            "slug": "VrQh",
+            "poems": [
+                "bJIa"
+            ]
+        },
+        {
+            "slug": "WMfP",
+            "poems": [
+                "ZYgM"
+            ]
+        },
+        {
+            "slug": "WQqQ",
+            "poems": [
+                "zzCT"
+            ]
+        },
+        {
+            "slug": "WoZm",
+            "poems": [
+                "ZKms"
+            ]
+        },
+        {
+            "slug": "XBPT",
+            "poems": [
+                "ZHGz"
+            ]
+        },
+        {
+            "slug": "ZNcV",
+            "poems": [
+                "BSaO"
+            ]
+        },
+        {
+            "slug": "ZSFm",
+            "poems": [
+                "bOuT"
+            ]
+        },
+        {
+            "slug": "Zmrp",
+            "poems": [
+                "SdUI"
+            ]
+        },
+        {
+            "slug": "aRaN",
+            "poems": [
+                "JKiT"
+            ]
+        },
+        {
+            "slug": "alYL",
+            "poems": [
+                "amUn"
+            ]
+        },
+        {
+            "slug": "cYVm",
+            "poems": [
+                "qBvY"
+            ]
+        },
+        {
+            "slug": "cxWf",
+            "poems": [
+                "HWdV"
+            ]
+        },
+        {
+            "slug": "czJW",
+            "poems": [
+                "YumN"
+            ]
+        },
+        {
+            "slug": "eYCV",
+            "poems": [
+                "dteC"
+            ]
+        },
+        {
+            "slug": "eiSp",
+            "poems": [
+                "rtNy"
+            ]
+        },
+        {
+            "slug": "eqoY",
+            "poems": [
+                "igLq"
+            ]
+        },
+        {
+            "slug": "exsE",
+            "poems": [
+                "zYAn"
+            ]
+        },
+        {
+            "slug": "fhUH",
+            "poems": [
+                "XKcW"
+            ]
+        },
+        {
+            "slug": "fucd",
+            "poems": [
+                "moid"
+            ]
+        },
+        {
+            "slug": "gWdi",
+            "poems": [
+                "vxTj"
+            ]
+        },
+        {
+            "slug": "heCc",
+            "poems": [
+                "LPPu"
+            ]
+        },
+        {
+            "slug": "iNUk",
+            "poems": [
+                "oVML"
+            ]
+        },
+        {
+            "slug": "imHZ",
+            "poems": [
+                "rmgo"
+            ]
+        },
+        {
+            "slug": "jJcT",
+            "poems": [
+                "RUED"
+            ]
+        },
+        {
+            "slug": "jLHS",
+            "poems": [
+                "tsKq"
+            ]
+        },
+        {
+            "slug": "jlbT",
+            "poems": [
+                "gvwA"
+            ]
+        },
+        {
+            "slug": "jmVF",
+            "poems": [
+                "mMwF"
+            ]
+        },
+        {
+            "slug": "kKfo",
+            "poems": [
+                "fYGM"
+            ]
+        },
+        {
+            "slug": "kkgX",
+            "poems": [
+                "LUry"
+            ]
+        },
+        {
+            "slug": "lVoU",
+            "poems": [
+                "oMec"
+            ]
+        },
+        {
+            "slug": "lZaf",
+            "poems": [
+                "APjg"
+            ]
+        },
+        {
+            "slug": "mBQM",
+            "poems": [
+                "hnGz"
+            ]
+        },
+        {
+            "slug": "mNSK",
+            "poems": [
+                "pKFL"
+            ]
+        },
+        {
+            "slug": "nCjD",
+            "poems": [
+                "hqxQ"
+            ]
+        },
+        {
+            "slug": "nDTL",
+            "poems": [
+                "qHpH"
+            ]
+        },
+        {
+            "slug": "ndfb",
+            "poems": [
+                "QMKa"
+            ]
+        },
+        {
+            "slug": "oNbs",
+            "poems": [
+                "kdmy"
+            ]
+        },
+        {
+            "slug": "pDmd",
+            "poems": [
+                "RqLx"
+            ]
+        },
+        {
+            "slug": "pPoR",
+            "poems": [
+                "veqD"
+            ]
+        },
+        {
+            "slug": "pZCx",
+            "poems": [
+                "uPjA"
+            ]
+        },
+        {
+            "slug": "qdtv",
+            "poems": [
+                "sydF"
+            ]
+        },
+        {
+            "slug": "rDtL",
+            "poems": [
+                "gvVL"
+            ]
+        },
+        {
+            "slug": "soCb",
+            "poems": [
+                "pgFG"
+            ]
+        },
+        {
+            "slug": "vPJt",
+            "poems": [
+                "sSqd"
+            ]
+        },
+        {
+            "slug": "wTrG",
+            "poems": [
+                "LdKz"
+            ]
+        },
+        {
+            "slug": "whNy",
+            "poems": [
+                "yEON"
+            ]
+        },
+        {
+            "slug": "xLjC",
+            "poems": [
+                "dRzc"
+            ]
+        },
+        {
+            "slug": "yFAi",
+            "poems": [
+                "NlVG"
+            ]
+        },
+        {
+            "slug": "yIya",
+            "poems": [
+                "qWGW"
+            ]
+        },
+        {
+            "slug": "yfIn",
+            "poems": [
+                "POcI"
+            ]
+        },
+        {
+            "slug": "zbus",
+            "poems": [
+                "LVLi"
+            ]
+        }
+    ],
+    "source": "0031_23_09_2026"
+}
