@@ -794,11 +794,11 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 - **Normal approach:** the component's default sort.
 - **Date:** 2026-06-18
 
-### The bundled Amiri fonts are patched to draw `٬` as a comma
+### The bundled Amiri fonts are patched to draw `٬` as the ASCII comma
 
-- **What:** both Amiri `.woff2` files map U+066C (Arabic thousands separator) to Amiri's own `comma` glyph instead of its `uni066C` glyph.
-- **Where:** `apps/web/public/fonts/Amiri-Regular-400-v2.woff2`, `apps/web/public/fonts/Amiri-Bold-700-v2.woff2`
-- **Why:** `Intl.NumberFormat('ar-SA')` groups with U+066C, and Amiri draws it as a small raised mark that reads like an apostrophe between digits. Amiri is OFL 1.1 with no Reserved Font Name, so the patched files keep the name. Replacing or re-downloading the fonts drops the patch; reapply it with fontTools: for each file, `f = TTFont(path)`, set `table.cmap[0x066C] = 'comma'` in every `f['cmap'].tables` entry that has it, then `f.save(path)`. `/fonts/` is served `immutable` (`apps/web/nginx.conf`), so a changed font file needs a new name (the `-v2` suffix), updated in `styles/globals.css` and the preload in `components/layout/seo.astro`.
+- **What:** both Amiri `.woff2` files map U+066C (Arabic thousands separator) to the glyph of the ASCII comma `,` (U+002C), not Amiri's own `٬` glyph and not the Arabic comma `،` (U+060C).
+- **Where:** `apps/web/src/assets/fonts/Amiri-Regular-400.woff2`, `apps/web/src/assets/fonts/Amiri-Bold-700.woff2`
+- **Why:** `Intl.NumberFormat('ar-SA')` groups with U+066C, and Amiri draws it as a small raised mark that reads like an apostrophe between digits. Amiri has no alternate glyph for it that CSS could select, and swapping the character in code would put a Latin comma into the text that copy/paste and screen readers see. Amiri is OFL 1.1 with no Reserved Font Name, so the patched files keep the name. Replacing or re-downloading the fonts drops the patch; reapply it with fontTools: for each file, `f = TTFont(path)`, set `table.cmap[0x066C] = table.cmap[0x2C]` in every `f['cmap'].tables` entry that has U+066C, then `f.save(path)`.
 - **Normal approach:** ship the font files unmodified.
 - **Date:** 2026-09-24
 

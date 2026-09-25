@@ -1,4 +1,5 @@
 ---
+import { Font } from 'astro:assets';
 import { Footer } from '@/components/footer';
 import ModuleReloadRecovery from '@/components/layout/module-reload-recovery.astro';
 import Nav from '@/components/layout/nav.astro';
@@ -28,6 +29,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
   <head>
     <ModuleReloadRecovery />
     <SEO {...seo} />
+    <Font cssVariable="--font-amiri" preload={[{ weight: 400 }]} />
     {!isDev && <PostHog />}
     {!isDev && <link rel="preconnect" href={POSTHOG_HOST} crossorigin />}
     {!isDev && <link rel="preconnect" href={TELEMETRY_PROXY_URL} crossorigin />}
