@@ -4,7 +4,7 @@ import { Check, ChevronDown, X } from 'lucide-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { type ArabicNounForms, formatArabicCount, toArabicDigits } from '@/lib/arabic';
+import { type ArabicNounForms, formatArabicCount, formatArabicNumber } from '@/lib/arabic';
 import { cn } from '@/lib/utils';
 
 import type { SelectOption } from '@/lib/constants/taxonomy-data';
@@ -269,7 +269,7 @@ export function Select({
                   <span>{option.label}</span>
                   {showCounts && option.poemsCount !== undefined && (
                     <Badge variant="outline" className="shrink-0 text-xs text-text-subtle">
-                      {toArabicDigits(option.poemsCount)}
+                      {formatArabicNumber(option.poemsCount)}
                     </Badge>
                   )}
                 </div>

@@ -21,7 +21,11 @@ export function toArabicDigits(input: number | string): string {
   return String(input).replaceAll(/[0-9]/g, (d) => DIGIT_LOOKUP[d] ?? d);
 }
 
-const ARABIC_LOCALE = 'ar-SA';
+const ARABIC_NUMBER_FORMAT = new Intl.NumberFormat('ar-SA');
+
+export function formatArabicNumber(value: number): string {
+  return ARABIC_NUMBER_FORMAT.format(value);
+}
 
 export function formatArabicCount({
   count,
@@ -32,7 +36,7 @@ export function formatArabicCount({
 }): string {
   const { singular, dual, plural } = nounForms;
   const absoluteCount = Math.abs(count);
-  const formattedNumber = new Intl.NumberFormat(ARABIC_LOCALE).format(absoluteCount);
+  const formattedNumber = formatArabicNumber(absoluteCount);
 
   if (!Number.isInteger(absoluteCount)) {
     return `${formattedNumber} ${singular}`;
