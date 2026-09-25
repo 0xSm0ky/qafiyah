@@ -3,7 +3,7 @@ import react from '@astrojs/react';
 // oxlint-disable-next-line import/default
 import sentry from '@sentry/astro';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 
 const PROD_SITE_URL = 'https://qafiyah.com';
 const DEV_WEB_PORT = 4321;
@@ -17,6 +17,22 @@ export default defineConfig({
   security: { allowedDomains: [{ hostname: new URL(PROD_SITE_URL).hostname, protocol: 'https' }] },
   server: { port: Number(process.env.WEB_PORT ?? DEV_WEB_PORT) },
   build: { inlineStylesheets: 'always' },
+  fonts: [
+    {
+      provider: fontProviders.local(),
+      name: 'Amiri',
+      cssVariable: '--font-amiri',
+      fallbacks: ['Amiri Fallback', 'serif'],
+      optimizedFallbacks: false,
+      display: 'swap',
+      options: {
+        variants: [
+          { weight: 400, style: 'normal', src: ['./src/assets/fonts/Amiri-Regular-400.woff2'] },
+          { weight: 700, style: 'normal', src: ['./src/assets/fonts/Amiri-Bold-700.woff2'] },
+        ],
+      },
+    },
+  ],
   integrations: [
     react(),
     sentry({
