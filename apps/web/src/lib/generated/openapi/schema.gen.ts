@@ -373,6 +373,8 @@ export interface components {
                 poemType: components["schemas"]["PoemTypeRef"];
                 poet: components["schemas"]["PoetRef"];
                 prev?: components["schemas"]["PoemNavRef"];
+                recensionOf?: components["schemas"]["PoemNavRef"];
+                recensions: components["schemas"]["PoemRecensionRef"][];
                 relatedPoems: components["schemas"]["PoemListItem"][];
                 rhyme: components["schemas"]["RhymeRef"];
                 sample: string;
@@ -555,6 +557,8 @@ export interface components {
             poemType: components["schemas"]["PoemTypeRef"];
             poet: components["schemas"]["PoetRef"];
             prev?: components["schemas"]["PoemNavRef"];
+            recensionOf?: components["schemas"]["PoemNavRef"];
+            recensions: components["schemas"]["PoemRecensionRef"][];
             relatedPoems: components["schemas"]["PoemListItem"][];
             rhyme: components["schemas"]["RhymeRef"];
             sample: string;
@@ -586,6 +590,13 @@ export interface components {
             /** @example TnKK */
             slug: string;
             title: string;
+        };
+        PoemRecensionRef: {
+            /** @example TnKK */
+            slug: string;
+            title: string;
+            /** Format: int32 */
+            verseCount: number;
         };
         PoemTypeRef: {
             name: string;
@@ -1265,6 +1276,15 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ItemEnvelope_PoemDetail"];
                 };
+            };
+            /** @description The slug belongs to a poem merged into another; `Location` names the surviving poem. */
+            301: {
+                headers: {
+                    /** @description Path of the surviving poem */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Input validation failed */
             400: {

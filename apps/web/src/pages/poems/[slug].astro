@@ -3,15 +3,23 @@ import type { PoemSlug } from '@/lib/api/brands';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import AdjacentPoems from '@/components/adjacent-poems.astro';
 import { PoemDisplay } from '@/components/poem-display';
+import Recensions from '@/components/recensions.astro';
 import RelatedPoems from '@/components/related-poems.astro';
 import Layout from '@/layouts/layout.astro';
 import { buildPoemLayout } from '@/lib/seo/poem-page';
 import { CACHE_HTML } from '@/lib/server/cache';
-import { getPoem } from '@/lib/server/poems';
+import { getPoem, movedPoemPath } from '@/lib/server/poems';
+import { poemUrl } from '@/lib/urls';
 
 const { slug } = Astro.params;
 const detail = slug ? await getPoem(slug as PoemSlug) : null;
 if (!detail) return Astro.rewrite('/404');
+const moved = movedPoemPath(slug as string, detail);
+if (moved) {
+  const redirect = Astro.redirect(moved, 301);
+  redirect.headers.set('Cache-Control', CACHE_HTML);
+  return redirect;
+}
 
 Astro.response.headers.set('Cache-Control', CACHE_HTML);
 const poem = detail;
@@ -36,6 +44,16 @@ const layout = buildPoemLayout(detail, slug as PoemSlug);
   <div class="w-full">
     <div class="pt-8 xs:pt-10">
       <Breadcrumbs items={layout.crumbItems} />
+      {
+        poem.recensionOf && (
+          <p class="text-text-subtle">
+            هذه رواية أخرى لقصيدة{' '}
+            <a class="underline" href={poemUrl(poem.recensionOf.slug)}>
+              {poem.recensionOf.title}
+            </a>
+          </p>
+        )
+      }
     </div>
     <div class="my-14 flex w-full flex-col items-center gap-10 xs:my-20 lg:my-28">
       <div class="flex w-full max-w-5xl flex-col items-center gap-10">
@@ -58,6 +76,7 @@ const layout = buildPoemLayout(detail, slug as PoemSlug);
         nextTitle={layout.adjacentPoems.nextTitle}
         hidden={layout.adjacentPoems.hidden}
       />
+      <Recensions recensions={poem.recensions} />
       <RelatedPoems relatedPoems={poem.relatedPoems} />
     </div>
   </div>

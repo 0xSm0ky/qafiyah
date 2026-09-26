@@ -54,7 +54,7 @@ type PoemLayoutProps = {
   readonly jsonLd: readonly [PoemArticleDoc, BreadcrumbListDoc];
 };
 
-function buildCrumbItems(poem: Poem, slug: PoemSlug): readonly BreadcrumbItem[] {
+function buildCrumbItems(poem: Poem, slug: string): readonly BreadcrumbItem[] {
   return [
     { name: SITE_NAME_AR, path: '/' },
     { name: 'الشعراء', path: poetsUrl() },
@@ -114,13 +114,14 @@ export function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   );
   const pageTitle = withBrand(`${sanitizeMetaText(displayTitle)} - ${sanitizeMetaText(poetName)}`);
   const muallaqaTitle = MUALLAQA_SEARCH_TITLES[slug];
-  const pageUrl = `${SITE_URL}${poemUrl(slug)}`;
-  const crumbItems = buildCrumbItems(poem, slug);
+  const canonicalSlug = poem.recensionOf?.slug ?? slug;
+  const pageUrl = `${SITE_URL}${poemUrl(canonicalSlug)}`;
+  const crumbItems = buildCrumbItems(poem, canonicalSlug);
   const adjacentPoems = deriveAdjacentPoems(poem);
   return {
     title: muallaqaTitle === undefined ? pageTitle : withBrand(muallaqaTitle),
     description,
-    canonical: poemUrl(slug),
+    canonical: poemUrl(canonicalSlug),
     ogTitle: pageTitle,
     ogDescription: description,
     twitterTitle: pageTitle,

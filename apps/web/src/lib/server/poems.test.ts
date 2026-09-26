@@ -9,7 +9,7 @@ vi.mock('./client', () => ({
 import { failure, ok } from '@/test/api-results';
 
 import { apiServer } from './client';
-import { getPoem, listPoems } from './poems';
+import { getPoem, listPoems, movedPoemPath } from './poems';
 
 const get = apiServer.GET as unknown as ReturnType<typeof vi.fn>;
 
@@ -103,5 +103,15 @@ describe('listPoems', () => {
   it('rethrows on a 500', async () => {
     get.mockResolvedValue(failure(500));
     await expect(listPoems({}, 1)).rejects.toThrow();
+  });
+});
+
+describe('movedPoemPath', () => {
+  it('is null when the poem answered under the slug that was asked for', () => {
+    expect(movedPoemPath('TnKK', { slug: 'TnKK' })).toBeNull();
+  });
+
+  it('is the canonical path when the API followed an alias to another slug', () => {
+    expect(movedPoemPath('abCD', { slug: 'TnKK' })).toBe('/poems/TnKK');
   });
 });

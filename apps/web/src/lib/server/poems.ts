@@ -1,3 +1,5 @@
+import { poemUrl } from '@/lib/urls';
+
 import { isNotFoundStatus } from './api-error';
 import { apiServer } from './client';
 import { apiFailure, getOrNull, safeCall } from './unwrap';
@@ -28,6 +30,10 @@ type PoemsList = Ok<'/poems'>;
 
 export const getPoem = (slug: PoemSlug): Promise<Poem | null> =>
   getOrNull(() => apiServer.GET('/poems/{slug}', { params: { path: { slug } } }));
+
+export function movedPoemPath(requested: string, poem: Pick<Poem, 'slug'>): string | null {
+  return poem.slug === requested ? null : poemUrl(poem.slug);
+}
 
 export async function listPoems(
   filters: PoemFilters,

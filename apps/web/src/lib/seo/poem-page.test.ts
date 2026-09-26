@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { SITE_URL } from '@/lib/constants/config';
+
 import { buildPoemLayout } from './poem-page';
 
 const basePoem = {
@@ -15,6 +17,7 @@ const basePoem = {
   meter: { name: 'الطويل', slug: 'altawil' },
   rhyme: { name: 'الراء', slug: 'r' },
   theme: { name: 'المديح', slug: 'almadih' },
+  recensions: [],
 } as unknown as Parameters<typeof buildPoemLayout>[0];
 
 describe('buildPoemLayout', () => {
@@ -53,6 +56,25 @@ describe('buildPoemLayout', () => {
     const layout = buildPoemLayout(poem, 'brda' as Parameters<typeof buildPoemLayout>[1]);
     const [article] = layout.jsonLd;
     expect(article.keywords).toBe('الطويل, الراء, العباسي, المتنبي');
+  });
+
+  it('points a recension canonical URL at its primary poem', () => {
+    const poem = { ...basePoem, recensionOf: { slug: 'PRIM', title: 'الأصل' } };
+    const layout = buildPoemLayout(poem, 'brda' as Parameters<typeof buildPoemLayout>[1]);
+    expect(layout.canonical).toBe('/poems/PRIM');
+  });
+
+  it('gives a recension JSON-LD the same URL as its canonical', () => {
+    const poem = { ...basePoem, recensionOf: { slug: 'PRIM', title: 'الأصل' } };
+    const layout = buildPoemLayout(poem, 'brda' as Parameters<typeof buildPoemLayout>[1]);
+    const [article, breadcrumbs] = layout.jsonLd;
+    expect(article.url).toBe(`${SITE_URL}/poems/PRIM`);
+    expect(breadcrumbs.itemListElement.at(-1)?.item).toBe(`${SITE_URL}/poems/PRIM`);
+  });
+
+  it('keeps a primary poem canonical to itself', () => {
+    const layout = buildPoemLayout(basePoem, 'brda' as Parameters<typeof buildPoemLayout>[1]);
+    expect(layout.canonical).toBe('/poems/brda');
   });
 
   it('drops an anonymous poet from keywords', () => {
