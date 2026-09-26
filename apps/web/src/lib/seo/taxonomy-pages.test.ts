@@ -49,10 +49,26 @@ describe('buildTaxonomyTermView', () => {
     expect(layout.canonical).toBe('/rhymes/r?page=2');
   });
 
-  it('never surfaces the unknown-poet sentinel as a sample poet (regression: it has the most poems of any poet)', () => {
+  it('never surfaces an anonymous poet as a sample poet (regression: the unknown poet has the most poems of any poet)', () => {
     const poemsWithUnknownPoet = [
-      { title: 'قصيدة أولى', slug: 'p1', poet: { name: 'غير معروف', slug: 'JJHE' }, meter: {} },
-      { title: 'قصيدة ثانية', slug: 'p2', poet: { name: 'المتنبي', slug: 'mutanabbi' }, meter: {} },
+      {
+        title: 'قصيدة أولى',
+        slug: 'p1',
+        poet: { name: 'غير معروف', slug: 'JJHE', isAnonymous: true },
+        meter: {},
+      },
+      {
+        title: 'قصيدة ثانية',
+        slug: 'p2',
+        poet: { name: 'مجهول (عباسي)', slug: 'EaOH', isAnonymous: true },
+        meter: {},
+      },
+      {
+        title: 'قصيدة ثالثة',
+        slug: 'p3',
+        poet: { name: 'المتنبي', slug: 'mutanabbi', isAnonymous: false },
+        meter: {},
+      },
     ] as unknown as TaxonomyTermLoad['poems'];
 
     const { layout } = buildTaxonomyTermView('meters', {
@@ -62,6 +78,7 @@ describe('buildTaxonomyTermView', () => {
     });
 
     expect(layout.description).not.toContain('غير معروف');
+    expect(layout.description).not.toContain('مجهول');
     expect(layout.description).toContain('المتنبي');
   });
 

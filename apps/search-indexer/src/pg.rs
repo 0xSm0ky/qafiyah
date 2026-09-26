@@ -17,6 +17,7 @@ const POEM_SELECT: &str = "
       WHERE pv.poem_id = p.id
     ), '') AS content,
     pt.name AS poet_name, pt.slug AS poet_slug, pt.has_avatar AS poet_has_avatar,
+    pt.is_anonymous AS poet_is_anonymous,
     e.name AS era_name, e.slug AS era_slug,
     m.name AS meter_name, m.slug AS meter_slug,
     t.slug AS theme_slug,
@@ -107,6 +108,7 @@ pub(crate) async fn stream_poem_batch(
             poet_name: r.get("poet_name"),
             poet_slug: r.get("poet_slug"),
             poet_has_avatar: r.get("poet_has_avatar"),
+            poet_is_anonymous: r.get("poet_is_anonymous"),
             era_name: r.get("era_name"),
             era_slug: r.get("era_slug"),
             meter_name: r.get("meter_name"),

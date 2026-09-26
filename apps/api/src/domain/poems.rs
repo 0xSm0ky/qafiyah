@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use serde::{Deserialize, Serialize};
 use sqlx::{AssertSqlSafe, PgPool};
 use utoipa::ToSchema;
@@ -101,6 +99,7 @@ struct PoemListRow {
     poet_name: String,
     poet_slug: String,
     poet_has_avatar: bool,
+    poet_is_anonymous: bool,
     meter_name: String,
     meter_slug: String,
 }
@@ -114,6 +113,7 @@ impl From<PoemListRow> for PoemListItem {
                 name: row.poet_name,
                 slug: row.poet_slug,
                 has_avatar: row.poet_has_avatar,
+                is_anonymous: row.poet_is_anonymous,
             },
             meter: MeterRef {
                 name: row.meter_name,
@@ -131,6 +131,7 @@ struct RelatedRow {
     poet_name: String,
     poet_slug: String,
     poet_has_avatar: bool,
+    poet_is_anonymous: bool,
     meter_name: String,
     meter_slug: String,
     era_name: String,
@@ -146,6 +147,7 @@ impl From<RelatedRow> for PoemListItem {
                 name: row.poet_name,
                 slug: row.poet_slug,
                 has_avatar: row.poet_has_avatar,
+                is_anonymous: row.poet_is_anonymous,
             },
             meter: MeterRef {
                 name: row.meter_name,
@@ -173,6 +175,7 @@ struct PoemDetailRow {
     poet_name: String,
     poet_slug: String,
     poet_has_avatar: bool,
+    poet_is_anonymous: bool,
     meter_name: String,
     meter_slug: String,
     theme_name: String,
@@ -233,97 +236,44 @@ pub async fn list_slugs(pg: &PgPool, page: u32, page_size: u32) -> Result<Vec<St
 }
 
 struct Clauses<'a> {
-    filter_joins: String,
     where_clause: String,
     counted_by: Option<&'static str>,
     bound: Vec<&'a Vec<String>>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum Table {
-    Poets,
-    Eras,
-}
-
-impl Table {
-    fn join(self) -> &'static str {
-        match self {
-            Table::Poets => "JOIN public.poets pt ON p.poet_id = pt.id",
-            Table::Eras => "JOIN public.eras e ON pt.era_id = e.id",
-        }
-    }
-}
-
-fn join_sql(tables: &BTreeSet<Table>) -> String {
-    tables
-        .iter()
-        .map(|table| table.join())
-        .collect::<Vec<&str>>()
-        .join(" ")
-}
-
-enum FacetKind {
-    Fk {
-        column: &'static str,
-        table: &'static str,
-    },
-    Slug {
-        column: &'static str,
-        reached_through: &'static [Table],
-    },
-}
-
 fn clauses(facets: &Facets) -> Clauses<'_> {
-    let mut filtered: BTreeSet<Table> = BTreeSet::new();
     let mut conditions: Vec<String> = Vec::new();
     let mut bound: Vec<&Vec<String>> = Vec::new();
     let mut stats: Vec<&'static str> = Vec::new();
-    for (kind, stats_table, values) in [
+    for (column, table, stats_table, values) in [
         (
-            FacetKind::Fk {
-                column: "p.poet_id",
-                table: "public.poets",
-            },
+            "p.poet_id",
+            "public.poets",
             "public.poet_stats",
             &facets.poet,
         ),
+        ("p.era_id", "public.eras", "public.era_stats", &facets.era),
         (
-            FacetKind::Slug {
-                column: "e.slug",
-                reached_through: &[Table::Poets, Table::Eras],
-            },
-            "public.era_stats",
-            &facets.era,
-        ),
-        (
-            FacetKind::Fk {
-                column: "p.meter_id",
-                table: "public.meters",
-            },
+            "p.meter_id",
+            "public.meters",
             "public.meter_stats",
             &facets.meter,
         ),
         (
-            FacetKind::Fk {
-                column: "p.theme_id",
-                table: "public.themes",
-            },
+            "p.theme_id",
+            "public.themes",
             "public.theme_stats",
             &facets.theme,
         ),
         (
-            FacetKind::Fk {
-                column: "p.rhyme_id",
-                table: "public.rhymes",
-            },
+            "p.rhyme_id",
+            "public.rhymes",
             "public.rhyme_stats",
             &facets.rhyme,
         ),
         (
-            FacetKind::Fk {
-                column: "p.collection_id",
-                table: "public.collections",
-            },
+            "p.collection_id",
+            "public.collections",
             "public.collection_stats",
             &facets.collection,
         ),
@@ -334,24 +284,14 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
         bound.push(values);
         stats.push(stats_table);
         let n = bound.len();
-        match kind {
-            FacetKind::Fk { column, table } if values.len() == 1 => {
-                conditions.push(format!(
-                    "{column} = (SELECT id FROM {table} WHERE slug = (${n})[1])"
-                ));
-            }
-            FacetKind::Fk { column, table } => {
-                conditions.push(format!(
-                    "{column} IN (SELECT id FROM {table} WHERE slug = ANY(${n}))"
-                ));
-            }
-            FacetKind::Slug {
-                column,
-                reached_through,
-            } => {
-                filtered.extend(reached_through);
-                conditions.push(format!("{column} = ANY(${n})"));
-            }
+        if values.len() == 1 {
+            conditions.push(format!(
+                "{column} = (SELECT id FROM {table} WHERE slug = (${n})[1])"
+            ));
+        } else {
+            conditions.push(format!(
+                "{column} IN (SELECT id FROM {table} WHERE slug = ANY(${n}))"
+            ));
         }
     }
 
@@ -367,7 +307,6 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
     };
 
     Clauses {
-        filter_joins: join_sql(&filtered),
         where_clause,
         counted_by,
         bound,
@@ -376,16 +315,15 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
 
 fn list_sql(clauses: &Clauses<'_>) -> (String, String) {
     let Clauses {
-        filter_joins,
         where_clause,
         counted_by,
         bound,
     } = clauses;
     let rows_sql = format!(
         "SELECT p.title AS title, p.slug AS slug, pt.name AS poet_name, pt.slug AS poet_slug, \
-         pt.has_avatar AS poet_has_avatar, \
+         pt.has_avatar AS poet_has_avatar, pt.is_anonymous AS poet_is_anonymous, \
          m.name AS meter_name, m.slug AS meter_slug \
-         FROM (SELECT p.id FROM public.poems p {filter_joins} {where_clause} \
+         FROM (SELECT p.id FROM public.poems p {where_clause} \
          ORDER BY p.id LIMIT ${} OFFSET ${}) page \
          JOIN public.poems p ON p.id = page.id \
          JOIN public.poets pt ON p.poet_id = pt.id \
@@ -398,9 +336,7 @@ fn list_sql(clauses: &Clauses<'_>) -> (String, String) {
         Some(stats_table) => format!(
             "SELECT (SELECT poems_count::int FROM {stats_table} WHERE slug = ($1)[1]) AS total"
         ),
-        None => format!(
-            "SELECT COUNT(*)::int AS total FROM public.poems p {filter_joins} {where_clause}"
-        ),
+        None => format!("SELECT COUNT(*)::int AS total FROM public.poems p {where_clause}"),
     };
     (rows_sql, count_sql)
 }
@@ -459,6 +395,7 @@ pub async fn get(pg: &PgPool, slug: &str) -> Result<PoemDetail, AppError> {
         pt.name        AS poet_name,
         pt.slug        AS poet_slug,
         pt.has_avatar  AS poet_has_avatar,
+        pt.is_anonymous AS poet_is_anonymous,
         m.name   AS meter_name,
         m.slug   AS meter_slug,
         th.name  AS theme_name,
@@ -477,6 +414,7 @@ pub async fn get(pg: &PgPool, slug: &str) -> Result<PoemDetail, AppError> {
               'poet_name',       rpt.name,
               'poet_slug',       rpt.slug,
               'poet_has_avatar', rpt.has_avatar,
+              'poet_is_anonymous', rpt.is_anonymous,
               'meter_name', rm.name,
               'meter_slug', rm.slug,
               'era_name',   re.name,
@@ -500,7 +438,7 @@ pub async fn get(pg: &PgPool, slug: &str) -> Result<PoemDetail, AppError> {
       WHERE p.slug = $1
       GROUP BY
         p.id, p.slug, p.title, p.verse_count,
-        pt.name, pt.slug, pt.has_avatar, m.name, m.slug,
+        pt.name, pt.slug, pt.has_avatar, pt.is_anonymous, m.name, m.slug,
         th.name, th.slug, e.name, e.slug, r.name, r.slug, ty.name, ty.slug
     "#,
     )
@@ -525,6 +463,7 @@ pub async fn get(pg: &PgPool, slug: &str) -> Result<PoemDetail, AppError> {
             name: row.poet_name,
             slug: row.poet_slug,
             has_avatar: row.poet_has_avatar,
+            is_anonymous: row.poet_is_anonymous,
         },
         era: EraRef {
             name: row.era_name,
@@ -658,19 +597,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_filter_joins_only_what_a_filter_reads() {
-        let unfiltered = Facets::default();
-        let none = clauses(&unfiltered);
-        assert_eq!(none.filter_joins, "");
-
-        let era_only = Facets {
-            era: vec!["abbasi".into()],
+    fn the_era_filter_reads_the_poems_own_era_without_joining_poets() {
+        let facets = Facets {
+            era: vec!["abbasi".into(), "umawi".into()],
             ..Facets::default()
         };
-        let by_era = clauses(&era_only);
-        assert!(by_era.filter_joins.contains("public.eras"));
-        assert!(by_era.filter_joins.contains("public.poets"));
-        assert!(!by_era.filter_joins.contains("public.meters"));
+        let (rows, count) = list_sql(&clauses(&facets));
+        assert_eq!(
+            count,
+            "SELECT COUNT(*)::int AS total FROM public.poems p \
+             WHERE p.era_id IN (SELECT id FROM public.eras WHERE slug = ANY($1))"
+        );
+        assert_eq!(rows.matches("JOIN public.poets").count(), 1, "{rows}");
+        assert!(!rows.contains("public.eras e"), "{rows}");
     }
 
     #[test]
@@ -683,7 +622,8 @@ mod tests {
         let both = clauses(&facets);
         assert_eq!(
             both.where_clause,
-            "WHERE e.slug = ANY($1) AND p.rhyme_id = (SELECT id FROM public.rhymes WHERE slug = ($2)[1])"
+            "WHERE p.era_id = (SELECT id FROM public.eras WHERE slug = ($1)[1]) \
+             AND p.rhyme_id = (SELECT id FROM public.rhymes WHERE slug = ($2)[1])"
         );
         assert_eq!(both.bound.len(), 2);
     }
@@ -699,7 +639,6 @@ mod tests {
             single.where_clause,
             "WHERE p.meter_id = (SELECT id FROM public.meters WHERE slug = ($1)[1])"
         );
-        assert!(single.filter_joins.is_empty());
     }
 
     #[test]
@@ -713,7 +652,6 @@ mod tests {
             multi.where_clause,
             "WHERE p.meter_id IN (SELECT id FROM public.meters WHERE slug = ANY($1))"
         );
-        assert!(multi.filter_joins.is_empty());
     }
 
     #[test]
@@ -791,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn every_facet_together_binds_in_declaration_order_and_joins_each_table_once() {
+    fn every_facet_together_binds_in_declaration_order() {
         let facets = Facets {
             poet: vec!["yoFB".into()],
             era: vec!["abbasi".into(), "jahili".into()],
@@ -805,15 +743,11 @@ mod tests {
         assert_eq!(
             all.where_clause,
             "WHERE p.poet_id = (SELECT id FROM public.poets WHERE slug = ($1)[1]) \
-             AND e.slug = ANY($2) \
+             AND p.era_id IN (SELECT id FROM public.eras WHERE slug = ANY($2)) \
              AND p.meter_id = (SELECT id FROM public.meters WHERE slug = ($3)[1]) \
              AND p.theme_id = (SELECT id FROM public.themes WHERE slug = ($4)[1]) \
              AND p.rhyme_id = (SELECT id FROM public.rhymes WHERE slug = ($5)[1]) \
              AND p.collection_id = (SELECT id FROM public.collections WHERE slug = ($6)[1])"
-        );
-        assert_eq!(
-            all.filter_joins,
-            "JOIN public.poets pt ON p.poet_id = pt.id JOIN public.eras e ON pt.era_id = e.id"
         );
     }
 
@@ -840,11 +774,13 @@ mod tests {
         let by_era = clauses(&two_eras);
         let (rows, count) = list_sql(&by_era);
         assert!(
-            rows.contains("WHERE e.slug = ANY($1) ORDER BY p.id LIMIT $2 OFFSET $3) page"),
+            rows.contains("ANY($1)) ORDER BY p.id LIMIT $2 OFFSET $3) page"),
             "{rows}"
         );
-        assert_eq!(rows.matches("JOIN public.eras").count(), 1, "{rows}");
-        assert!(count.ends_with("JOIN public.poets pt ON p.poet_id = pt.id JOIN public.eras e ON pt.era_id = e.id WHERE e.slug = ANY($1)"), "{count}");
+        assert!(
+            count.ends_with("WHERE p.era_id IN (SELECT id FROM public.eras WHERE slug = ANY($1))"),
+            "{count}"
+        );
     }
 
     #[test]

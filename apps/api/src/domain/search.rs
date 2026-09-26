@@ -190,6 +190,7 @@ pub async fn search_poems(
                     name: display(source, "poetNameDisplay", "poetName"),
                     slug: text(source, "poetSlug"),
                     has_avatar: source["poetHasAvatar"].as_bool().unwrap_or(false),
+                    is_anonymous: source["poetIsAnonymous"].as_bool().unwrap_or(false),
                 },
                 meter: MeterRef {
                     name: text(source, "meterName"),

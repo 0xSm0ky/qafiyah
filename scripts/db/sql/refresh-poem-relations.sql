@@ -14,7 +14,7 @@ BEGIN
   FROM tmp_base b
   JOIN public.poets pt ON pt.id = b.poet_id
   JOIN public.eras  e  ON e.id  = b.era_id
-  WHERE pt.name <> 'غير معروف' AND e.slug <> 'ghayrmaruf';
+  WHERE NOT pt.is_anonymous AND e.slug <> 'ghayrmaruf';
   CREATE INDEX ON tmp_pool (id);
 
   CREATE TEMP TABLE tmp_ranked ON COMMIT DROP AS

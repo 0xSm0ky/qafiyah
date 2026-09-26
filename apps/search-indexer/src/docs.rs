@@ -10,6 +10,7 @@ pub(crate) struct PoemSource {
     pub poet_name: String,
     pub poet_slug: String,
     pub poet_has_avatar: bool,
+    pub poet_is_anonymous: bool,
     pub era_name: String,
     pub era_slug: String,
     pub meter_name: String,
@@ -40,6 +41,7 @@ pub(crate) struct PoemDoc {
     pub poet_name_display: String,
     pub poet_slug: String,
     pub poet_has_avatar: bool,
+    pub poet_is_anonymous: bool,
     pub era_slug: String,
     pub era_name: String,
     pub meter_slug: String,
@@ -73,6 +75,7 @@ pub(crate) fn to_poem_doc(src: PoemSource) -> PoemDoc {
         poet_name_display: src.poet_name,
         poet_slug: src.poet_slug,
         poet_has_avatar: src.poet_has_avatar,
+        poet_is_anonymous: src.poet_is_anonymous,
         era_slug: src.era_slug,
         era_name: src.era_name,
         meter_slug: src.meter_slug,
@@ -110,6 +113,7 @@ mod tests {
             poet_name: "المُتَنَبِّي".into(),
             poet_slug: "yoFB".into(),
             poet_has_avatar: true,
+            poet_is_anonymous: false,
             era_name: "عباسي".into(),
             era_slug: "abbasi".into(),
             meter_name: "الطويل".into(),
@@ -148,6 +152,7 @@ mod tests {
             (7, "TnKK", "")
         );
         assert!(doc.poet_has_avatar);
+        assert!(!doc.poet_is_anonymous);
     }
 
     #[test]

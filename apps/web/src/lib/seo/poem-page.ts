@@ -68,7 +68,8 @@ function buildPoemText(poem: Poem): string {
 }
 
 function buildPoemKeywords(poem: Poem): string {
-  return [poem.theme.name, poem.meter.name, poem.rhyme.name, poem.era.name, poem.poet.name]
+  const poetName = poem.poet.isAnonymous ? [] : [poem.poet.name];
+  return [poem.theme.name, poem.meter.name, poem.rhyme.name, poem.era.name, ...poetName]
     .map((term) => sanitizeMetaText(term))
     .filter((term) => term.length > 0 && term !== UNKNOWN_ENTITY_NAME)
     .join(KEYWORD_SEPARATOR);

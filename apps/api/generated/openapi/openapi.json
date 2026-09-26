@@ -2708,10 +2708,14 @@
         "required": [
           "name",
           "slug",
-          "hasAvatar"
+          "hasAvatar",
+          "isAnonymous"
         ],
         "properties": {
           "hasAvatar": {
+            "type": "boolean"
+          },
+          "isAnonymous": {
             "type": "boolean"
           },
           "name": {

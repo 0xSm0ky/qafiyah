@@ -13,6 +13,7 @@ pub struct PoetRef {
     #[schema(pattern = "^[a-zA-Z]{4}$", example = "yoFB")]
     pub slug: String,
     pub has_avatar: bool,
+    pub is_anonymous: bool,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -55,17 +56,19 @@ mod tests {
     use super::{EraRef, PoetRef};
 
     #[test]
-    fn serializes_the_three_fields_the_contract_names() {
+    fn serializes_the_four_fields_the_contract_names() {
         let json = serde_json::to_value(PoetRef {
             name: "المتنبي".into(),
             slug: "yoFB".into(),
             has_avatar: true,
+            is_anonymous: false,
         })
         .expect("serializable");
         assert_eq!(json["name"], "المتنبي");
         assert_eq!(json["slug"], "yoFB");
         assert_eq!(json["hasAvatar"], true);
-        assert_eq!(json.as_object().expect("object").len(), 3);
+        assert_eq!(json["isAnonymous"], false);
+        assert_eq!(json.as_object().expect("object").len(), 4);
     }
 
     #[test]

@@ -55,6 +55,16 @@ describe('buildPoemLayout', () => {
     expect(article.keywords).toBe('الطويل, الراء, العباسي, المتنبي');
   });
 
+  it('drops an anonymous poet from keywords', () => {
+    const poem = {
+      ...basePoem,
+      poet: { name: 'مجهول (عباسي)', slug: 'EaOH', hasAvatar: false, isAnonymous: true },
+    };
+    const layout = buildPoemLayout(poem, 'brda' as Parameters<typeof buildPoemLayout>[1]);
+    const [article] = layout.jsonLd;
+    expect(article.keywords).toBe('المديح, الطويل, الراء, العباسي');
+  });
+
   it('titles a muallaqa by its traditional name in search while share cards keep the poem title', () => {
     const poem = {
       ...basePoem,

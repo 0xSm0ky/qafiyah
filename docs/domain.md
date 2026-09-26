@@ -10,7 +10,8 @@ implementation detail, for the schema/module internals see `apps/api/AGENTS.md` 
 The core content entity: `title`, `slug` (four mixed-case letters, e.g. `TnKK`), `verses`
 (ordered pairs of hemistichs), `verse_count`, a `sample` (first three hemistichs, used for
 previews), and `keywords`.
-It does **not** have its own era, era is a property of the poet, not the poem (see Era below).
+It does **not** have its own era: its era is its poet's, carried as a copy the database keeps in
+sync (see Era below).
 Every poem has exactly one poet, meter, theme, rhyme, and poem type; collection, form,
 register, genre, and rhyme majra are optional (see Poem type below).
 
@@ -73,9 +74,10 @@ reindex. Treat that as a fact about the current application surface, not a promi
 
 ## Poet
 
-`name`, `slug`, an optional `nickname` and `bio`, one `era`, a precomputed `poems_count`, and
-`has_avatar` (whether an image exists for them, served from R2, see `data/avatars/README.md`). A
-poet has exactly one era; poems don't carry era independently.
+`name`, `slug`, an optional `nickname` and `bio`, one `era`, a precomputed `poems_count`,
+`has_avatar` (whether an image exists for them, served from R2, see `data/avatars/README.md`), and
+`is_anonymous` (see "The unknown value" below). A poet has exactly one era; poems don't carry era
+independently.
 
 `nickname` holds whatever a poet is otherwise known by, a kunya (أبو سعيد), a laqab (سراج الهند),
 or a shuhra (الحياوي), with no column distinguishing which. Roughly a fifth of poets have one.
@@ -102,8 +104,11 @@ from, قافية (qafiyah) is the Arabic word for a poem's rhyme.
 
 A chronological period (e.g. pre-Islamic/جاهلي, Islamic, Umayyad, Abbasid, ...). Eras have a
 `sort_order`, so era listings render in actual chronological sequence, not alphabetically. Era
-is a **poet**-level attribute: every poem inherits its era through its poet, there's no
-poem-level era column.
+is a **poet**-level attribute: every poem inherits its era through its poet. `poems.era_id` is a
+copy of it for filtering, kept equal to the poet's era by the composite foreign key
+`(poet_id, era_id) REFERENCES poets (id, era_id) ON UPDATE CASCADE`: a poem can't hold another
+era, and changing a poet's era moves their poems with it. The poems list filters on that copy
+through `(era_id, id)`, like every other facet.
 
 ## Theme (غرض, gharad)
 
@@ -123,9 +128,14 @@ Every taxonomy (poet, meter, era, theme, rhyme, collection) has a real row for *
 doesn't record that attribute.
 
 The slug is `ghayrmaruf` for every taxonomy _except poets_, whose slugs are always four random
-letters: the unknown poet is `غير معروف` / `JJHE`, so match it on `name`, never on slug
-(`UNKNOWN_ENTITY_NAME`, `apps/web/src/lib/seo/meta-text.ts`). A `poets.slug = 'ghayrmaruf'`
-test silently matches nothing.
+letters, so a `poets.slug = 'ghayrmaruf'` test silently matches nothing. The web matches the
+other taxonomies' unknown row on `name` (`UNKNOWN_ENTITY_NAME`, `apps/web/src/lib/seo/meta-text.ts`).
+
+Poets have one anonymous poet per era instead of a single unknown row: `غير معروف` / `JJHE`
+holds the anonymous poems whose era is unknown too, and `مجهول (عباسي)` and its siblings hold
+those whose era is known, so each keeps its era. All of them have `poets.is_anonymous` set (the
+API sends it as `poet.isAnonymous`), and that flag is what code checks, never a poet's name or
+slug.
 
 Poem type spells its unknown differently, `majhul` (مجهول), and it carries a second meaning
 as well. A poem is `majhul` either because the sourcing never said what form it was, or
@@ -135,9 +145,9 @@ demoted to `majhul`, never to `hurr`, and a poem too short or too irregular to t
 whatever label it already had rather than being demoted on absent evidence. So `majhul` is
 a statement about what is known, not a claim that the poem is formless. It behaves like any other taxonomy value (it
 has its own listing page, its own count), but the web app deliberately filters it out of "top N"
-attribution lists and picks the first _attributed_ poem when it needs a representative sample,
-so an unattributed poet's name never gets showcased as if it were a real byline
-(`apps/web/src/lib/seo/taxonomy-copy.ts`, `apps/web/src/lib/seo/meta-text.ts`).
+attribution lists and picks the first poem whose poet isn't anonymous when it needs a
+representative sample, so an anonymous poet's name never gets showcased as if it were a real
+byline (`apps/web/src/lib/seo/taxonomy-copy.ts`, `apps/web/src/lib/seo/meta-text.ts`).
 
 ## Related poems
 
@@ -145,8 +155,8 @@ Each poem has a precomputed list of up to 10 related poems (`poem_relations` tab
 `related_id`, `rank`), refreshed by `refresh_poem_relations()` before every DB dump snapshot, see
 `data/db/MAINTAINERS_GUIDE.md`.
 
-A poem whose era or poet is unknown is never _suggested_: the generator draws its candidates from
-a pool that excludes them (`tmp_pool` in `scripts/db/sql/refresh-poem-relations.sql`). Such a poem
+A poem whose era is unknown or whose poet is anonymous is never _suggested_: the generator draws
+its candidates from a pool that excludes them (`tmp_pool` in `scripts/db/sql/refresh-poem-relations.sql`). Such a poem
 still _gets_ a list of its own, just a shorter one, since its poet and era buckets contribute
 nothing.
 

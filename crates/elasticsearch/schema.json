@@ -132,6 +132,9 @@
         "poetHasAvatar": {
           "type": "boolean"
         },
+        "poetIsAnonymous": {
+          "type": "boolean"
+        },
         "poetSlug": {
           "type": "keyword"
         },

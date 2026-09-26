@@ -606,6 +606,7 @@ export interface components {
         };
         PoetRef: {
             hasAvatar: boolean;
+            isAnonymous: boolean;
             name: string;
             /** @example yoFB */
             slug: string;

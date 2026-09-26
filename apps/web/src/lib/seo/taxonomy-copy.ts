@@ -28,7 +28,7 @@ type PoemRow = Ok<'/poems'>['data'][number];
 function distinctPoetNames(poems: readonly PoemRow[], count: number): readonly string[] {
   const seen = new Set<string>();
   for (const poem of poems) {
-    if (poem.poet.name === UNKNOWN_ENTITY_NAME) continue;
+    if (poem.poet.isAnonymous) continue;
     seen.add(poem.poet.name);
     if (seen.size >= count) break;
   }
@@ -36,7 +36,7 @@ function distinctPoetNames(poems: readonly PoemRow[], count: number): readonly s
 }
 
 function firstAttributedPoem(poems: readonly PoemRow[]): PoemRow | undefined {
-  return poems.find((poem) => poem.poet.name !== UNKNOWN_ENTITY_NAME);
+  return poems.find((poem) => !poem.poet.isAnonymous);
 }
 
 const ARCHIVE_TAIL = 'ضمن أرشيف قافية الشامل للشعر العربي.';
