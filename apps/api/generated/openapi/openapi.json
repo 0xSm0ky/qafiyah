@@ -899,6 +899,17 @@
               }
             }
           },
+          "301": {
+            "description": "The slug belongs to a poem merged into another; `Location` names the surviving poem.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Path of the surviving poem"
+              }
+            }
+          },
           "400": {
             "description": "Input validation failed",
             "content": {
@@ -1990,6 +2001,7 @@
               "theme",
               "rhyme",
               "poemType",
+              "recensions",
               "relatedPoems"
             ],
             "properties": {
@@ -2013,6 +2025,15 @@
               },
               "prev": {
                 "$ref": "#/components/schemas/PoemNavRef"
+              },
+              "recensionOf": {
+                "$ref": "#/components/schemas/PoemNavRef"
+              },
+              "recensions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PoemRecensionRef"
+                }
               },
               "relatedPoems": {
                 "type": "array",
@@ -2535,6 +2556,7 @@
           "theme",
           "rhyme",
           "poemType",
+          "recensions",
           "relatedPoems"
         ],
         "properties": {
@@ -2558,6 +2580,15 @@
           },
           "prev": {
             "$ref": "#/components/schemas/PoemNavRef"
+          },
+          "recensionOf": {
+            "$ref": "#/components/schemas/PoemNavRef"
+          },
+          "recensions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PoemRecensionRef"
+            }
           },
           "relatedPoems": {
             "type": "array",
@@ -2654,6 +2685,28 @@
           },
           "title": {
             "type": "string"
+          }
+        }
+      },
+      "PoemRecensionRef": {
+        "type": "object",
+        "required": [
+          "title",
+          "slug",
+          "verseCount"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "TnKK",
+            "pattern": "^[a-zA-Z]{4}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "verseCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

@@ -30,7 +30,7 @@ const POEM_SELECT: &str = "
   JOIN public.themes t ON p.theme_id = t.id
   JOIN public.rhymes r ON p.rhyme_id = r.id
   LEFT JOIN public.collections c ON p.collection_id = c.id
-  WHERE p.id > $1 ORDER BY p.id ASC LIMIT $2
+  WHERE p.id > $1 AND p.recension_of_id IS NULL ORDER BY p.id ASC LIMIT $2
 ";
 
 const POET_SELECT: &str = "

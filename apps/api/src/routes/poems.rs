@@ -6,17 +6,19 @@ use axum::{Json, Router};
 use rand::RngExt;
 
 use crate::constants::{
-    MAX_FILTER_SLUGS, NO_STORE_CACHE_CONTROL, POEMS_PER_PAGE, SITEMAP_POEMS_PER_SHARD,
+    API_V1_PREFIX, MAX_FILTER_SLUGS, NO_STORE_CACHE_CONTROL, POEMS_PER_PAGE, READ_CACHE_CONTROL,
+    SITEMAP_POEMS_PER_SHARD,
 };
 use crate::domain::poems::{self, Facets, PoemDetail, PoemListItem, RandomPoemOption, Total};
 use crate::envelope::{ItemEnvelope, ListEnvelope, build_pagination};
-use crate::error::AppError;
+use crate::error::{AppError, Resource};
 use crate::extract::SafePath;
 use crate::log::LogHandle;
 use crate::openapi::{
     FilteredListErrors, FourLetterSlug, ListErrors, LookupErrors, TransliteratedSlug,
 };
 use crate::query::Query;
+use crate::routes::permanent_redirect;
 use crate::slug;
 use crate::state::AppState;
 
@@ -140,6 +142,7 @@ pub(crate) async fn count(
     ),
     responses(
         (status = 200, description = "The requested poem.", body = ItemEnvelope<PoemDetail>),
+        (status = 301, description = "The slug belongs to a poem merged into another; `Location` names the surviving poem.", headers(("Location" = String, description = "Path of the surviving poem"))),
         LookupErrors,
     ),
 )]
@@ -147,15 +150,29 @@ pub(crate) async fn detail(
     State(state): State<AppState>,
     Extension(log): Extension<LogHandle>,
     SafePath(raw): SafePath<String>,
-) -> Result<Json<ItemEnvelope<PoemDetail>>, AppError> {
+) -> Result<Response, AppError> {
     let slug = slug::four_letters(&raw)?;
-    let poem = poems::get(&state.pg, slug).await?;
+    let poem = match poems::get(&state.pg, slug).await {
+        Ok(poem) => poem,
+        Err(AppError::NotFound(Resource::Poem)) => {
+            let Some(survivor) = poems::alias_target(&state.pg, slug).await? else {
+                return Err(AppError::NotFound(Resource::Poem));
+            };
+            log.set("poem_id", slug);
+            log.set("alias_of", survivor.clone());
+            return Ok(permanent_redirect(
+                &format!("{API_V1_PREFIX}/poems/{survivor}"),
+                READ_CACHE_CONTROL,
+            ));
+        }
+        Err(error) => return Err(error),
+    };
     log.set("poem_id", slug);
     log.set("poet_id", poem.poet.slug.clone());
     log.set("era", poem.era.slug.clone());
     log.set("meter", poem.meter.slug.clone());
     log.set("theme", poem.theme.slug.clone());
-    Ok(Json(ItemEnvelope { data: poem }))
+    Ok(Json(ItemEnvelope { data: poem }).into_response())
 }
 
 async fn random(

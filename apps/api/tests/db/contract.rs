@@ -331,3 +331,119 @@ async fn every_json_success_carries_the_read_cache_policy_and_a_matching_conditi
         .expect("infallible");
     assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
 }
+
+#[tokio::test]
+async fn a_retired_poem_slug_redirects_permanently_to_the_poem_that_absorbed_it() {
+    let Some(h) = h().await else { return };
+    let pair: Option<(String, String)> = sqlx::query_as(
+        "SELECT a.slug, p.slug FROM public.poem_aliases a \
+         JOIN public.poems p ON p.id = a.poem_id ORDER BY a.slug LIMIT 1",
+    )
+    .fetch_optional(&h.pg)
+    .await
+    .expect("alias query");
+    let Some((alias, survivor)) = pair else {
+        return;
+    };
+
+    let moved = h.get(&format!("/v1/poems/{alias}")).await;
+    assert_eq!(moved.status, StatusCode::MOVED_PERMANENTLY);
+    let expected = format!("/v1/poems/{survivor}");
+    assert_eq!(moved.header("location"), Some(expected.as_str()));
+
+    let landed = h.get(&expected).await;
+    assert_eq!(landed.status, StatusCode::OK);
+    assert_eq!(landed.json()["data"]["slug"], survivor.as_str());
+
+    let recased: String = alias
+        .chars()
+        .map(|c| {
+            if c.is_ascii_uppercase() {
+                c.to_ascii_lowercase()
+            } else {
+                c.to_ascii_uppercase()
+            }
+        })
+        .collect();
+    let taken: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM public.poems WHERE slug = $1) \
+         OR EXISTS (SELECT 1 FROM public.poem_aliases WHERE slug = $1)",
+    )
+    .bind(&recased)
+    .fetch_one(&h.pg)
+    .await
+    .expect("recased lookup");
+    if !taken {
+        assert_eq!(
+            h.get(&format!("/v1/poems/{recased}")).await.status,
+            StatusCode::NOT_FOUND
+        );
+    }
+}
+
+#[tokio::test]
+async fn a_slug_that_is_neither_a_poem_nor_an_alias_is_still_not_found() {
+    let Some(h) = h().await else { return };
+    let free: Option<String> = sqlx::query_scalar(
+        "SELECT c FROM unnest(ARRAY['Qzqz','Zqzq','Xqxq','Qxqx']) AS c \
+         WHERE NOT EXISTS (SELECT 1 FROM public.poems WHERE slug = c) \
+         AND NOT EXISTS (SELECT 1 FROM public.poem_aliases WHERE slug = c) LIMIT 1",
+    )
+    .fetch_optional(&h.pg)
+    .await
+    .expect("free slug query");
+    let Some(free) = free else { return };
+    assert_eq!(
+        h.get(&format!("/v1/poems/{free}")).await.status,
+        StatusCode::NOT_FOUND
+    );
+}
+
+#[tokio::test]
+async fn a_single_term_total_from_the_stats_table_equals_a_live_count_of_primaries() {
+    let Some(h) = h().await else { return };
+    let body = h.get("/v1/poems?theme=almutafarriqat").await.json();
+    let stats_total = total_items(&body);
+    let live: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM public.poems p JOIN public.themes t ON t.id = p.theme_id \
+         WHERE t.slug = 'almutafarriqat' AND p.recension_of_id IS NULL",
+    )
+    .fetch_one(&h.pg)
+    .await
+    .unwrap_or(-1);
+    assert_eq!(i64::try_from(stats_total).unwrap_or(-2), live);
+}
+
+#[tokio::test]
+async fn a_recension_names_its_primary_and_the_primary_lists_it() {
+    let Some(h) = h().await else { return };
+    let pair: Option<(String, String)> = sqlx::query_as(
+        "SELECT r.slug, p.slug FROM public.poems r JOIN public.poems p ON p.id = r.recension_of_id \
+         ORDER BY r.id LIMIT 1",
+    )
+    .fetch_optional(&h.pg)
+    .await
+    .expect("recension query");
+    let Some((recension, primary)) = pair else {
+        return;
+    };
+    let variant = h.get(&format!("/v1/poems/{recension}")).await.json();
+    assert_eq!(variant["data"]["recensionOf"]["slug"], primary.as_str());
+    let main = h.get(&format!("/v1/poems/{primary}")).await.json();
+    assert!(main["data"].get("recensionOf").is_none());
+    let listed = main["data"]["recensions"]
+        .as_array()
+        .expect("recensions array");
+    assert!(listed.iter().any(|r| r["slug"] == recension.as_str()));
+    let chained: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM public.poems r JOIN public.poems p ON p.id = r.recension_of_id \
+         WHERE p.recension_of_id IS NOT NULL OR p.poet_id <> r.poet_id",
+    )
+    .fetch_one(&h.pg)
+    .await
+    .expect("chain query");
+    assert_eq!(
+        chained, 0,
+        "a recension must point at a primary of the same poet"
+    );
+}
