@@ -160,4 +160,5 @@ whole `poems` table on every request (hundreds of milliseconds per taxonomy inde
 rebuilt by `refresh_taxonomy_stats()` (`scripts/db/sql/refresh-taxonomy-stats.sql`, ~3s for the
 full corpus), which runs alongside `refresh_poem_relations()` before every dump and again on
 restore in `scripts/db/init.sh`. Anything that changes a poem's or poet's taxonomy assignment
-leaves them stale until that runs.
+leaves them stale until that runs. `GET /v1/poems` also reads its total from them when the filter
+is a single term (one value of one facet), so a stale table skews that list's pagination too.

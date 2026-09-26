@@ -235,6 +235,7 @@ pub async fn list_slugs(pg: &PgPool, page: u32, page_size: u32) -> Result<Vec<St
 struct Clauses<'a> {
     filter_joins: String,
     where_clause: String,
+    counted_by: Option<&'static str>,
     bound: Vec<&'a Vec<String>>,
 }
 
@@ -276,12 +277,14 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
     let mut filtered: BTreeSet<Table> = BTreeSet::new();
     let mut conditions: Vec<String> = Vec::new();
     let mut bound: Vec<&Vec<String>> = Vec::new();
-    for (kind, values) in [
+    let mut stats: Vec<&'static str> = Vec::new();
+    for (kind, stats_table, values) in [
         (
             FacetKind::Fk {
                 column: "p.poet_id",
                 table: "public.poets",
             },
+            "public.poet_stats",
             &facets.poet,
         ),
         (
@@ -289,6 +292,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
                 column: "e.slug",
                 reached_through: &[Table::Poets, Table::Eras],
             },
+            "public.era_stats",
             &facets.era,
         ),
         (
@@ -296,6 +300,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
                 column: "p.meter_id",
                 table: "public.meters",
             },
+            "public.meter_stats",
             &facets.meter,
         ),
         (
@@ -303,6 +308,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
                 column: "p.theme_id",
                 table: "public.themes",
             },
+            "public.theme_stats",
             &facets.theme,
         ),
         (
@@ -310,6 +316,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
                 column: "p.rhyme_id",
                 table: "public.rhymes",
             },
+            "public.rhyme_stats",
             &facets.rhyme,
         ),
         (
@@ -317,6 +324,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
                 column: "p.collection_id",
                 table: "public.collections",
             },
+            "public.collection_stats",
             &facets.collection,
         ),
     ] {
@@ -324,6 +332,7 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
             continue;
         }
         bound.push(values);
+        stats.push(stats_table);
         let n = bound.len();
         match kind {
             FacetKind::Fk { column, table } if values.len() == 1 => {
@@ -352,14 +361,26 @@ fn clauses(facets: &Facets) -> Clauses<'_> {
         format!("WHERE {}", conditions.join(" AND "))
     };
 
+    let counted_by = match (bound.as_slice(), stats.as_slice()) {
+        ([values], [stats_table]) if values.len() == 1 => Some(*stats_table),
+        _ => None,
+    };
+
     Clauses {
         filter_joins: join_sql(&filtered),
         where_clause,
+        counted_by,
         bound,
     }
 }
 
-fn list_sql(filter_joins: &str, where_clause: &str, bind_count: usize) -> (String, String) {
+fn list_sql(clauses: &Clauses<'_>) -> (String, String) {
+    let Clauses {
+        filter_joins,
+        where_clause,
+        counted_by,
+        bound,
+    } = clauses;
     let rows_sql = format!(
         "SELECT p.title AS title, p.slug AS slug, pt.name AS poet_name, pt.slug AS poet_slug, \
          pt.has_avatar AS poet_has_avatar, \
@@ -370,11 +391,17 @@ fn list_sql(filter_joins: &str, where_clause: &str, bind_count: usize) -> (Strin
          JOIN public.poets pt ON p.poet_id = pt.id \
          JOIN public.meters m ON p.meter_id = m.id \
          ORDER BY p.id",
-        bind_count.saturating_add(1),
-        bind_count.saturating_add(2)
+        bound.len().saturating_add(1),
+        bound.len().saturating_add(2)
     );
-    let count_sql =
-        format!("SELECT COUNT(*)::int AS total FROM public.poems p {filter_joins} {where_clause}");
+    let count_sql = match counted_by {
+        Some(stats_table) => format!(
+            "SELECT (SELECT poems_count::int FROM {stats_table} WHERE slug = ($1)[1]) AS total"
+        ),
+        None => format!(
+            "SELECT COUNT(*)::int AS total FROM public.poems p {filter_joins} {where_clause}"
+        ),
+    };
     (rows_sql, count_sql)
 }
 
@@ -384,16 +411,12 @@ pub async fn list(
     page: u32,
     page_size: u32,
 ) -> Result<(Vec<PoemListItem>, i32), AppError> {
-    let Clauses {
-        filter_joins,
-        where_clause,
-        bound,
-    } = clauses(facets);
-    let (rows_sql, count_sql) = list_sql(&filter_joins, &where_clause, bound.len());
+    let built = clauses(facets);
+    let (rows_sql, count_sql) = list_sql(&built);
 
     let mut rows_query = sqlx::query_as::<_, PoemListRow>(AssertSqlSafe(rows_sql));
     let mut count_query = sqlx::query_scalar::<_, Option<i32>>(AssertSqlSafe(count_sql));
-    for values in &bound {
+    for values in &built.bound {
         rows_query = rows_query.bind(*values);
         count_query = count_query.bind(*values);
     }
@@ -798,7 +821,7 @@ mod tests {
     fn the_list_sql_numbers_limit_and_offset_after_the_facet_binds() {
         let unfiltered = Facets::default();
         let none = clauses(&unfiltered);
-        let (rows, count) = list_sql(&none.filter_joins, &none.where_clause, none.bound.len());
+        let (rows, count) = list_sql(&none);
         assert!(rows.starts_with("SELECT p.title AS title, p.slug AS slug, pt.name AS poet_name"));
         assert!(
             rows.contains("ORDER BY p.id LIMIT $1 OFFSET $2) page"),
@@ -810,22 +833,97 @@ mod tests {
         assert!(count.starts_with("SELECT COUNT(*)::int AS total FROM public.poems p"));
         assert!(!count.contains("JOIN"));
 
-        let era_only = Facets {
-            era: vec!["abbasi".into()],
+        let two_eras = Facets {
+            era: vec!["abbasi".into(), "umawi".into()],
             ..Facets::default()
         };
-        let by_era = clauses(&era_only);
-        let (rows, count) = list_sql(
-            &by_era.filter_joins,
-            &by_era.where_clause,
-            by_era.bound.len(),
-        );
+        let by_era = clauses(&two_eras);
+        let (rows, count) = list_sql(&by_era);
         assert!(
             rows.contains("WHERE e.slug = ANY($1) ORDER BY p.id LIMIT $2 OFFSET $3) page"),
             "{rows}"
         );
         assert_eq!(rows.matches("JOIN public.eras").count(), 1, "{rows}");
         assert!(count.ends_with("JOIN public.poets pt ON p.poet_id = pt.id JOIN public.eras e ON pt.era_id = e.id WHERE e.slug = ANY($1)"), "{count}");
+    }
+
+    #[test]
+    fn a_single_term_is_counted_from_its_stats_table() {
+        let one = |facets: Facets| list_sql(&clauses(&facets)).1;
+        let term = || vec!["x".to_string()];
+        for (count, stats_table) in [
+            (
+                one(Facets {
+                    poet: term(),
+                    ..Facets::default()
+                }),
+                "poet_stats",
+            ),
+            (
+                one(Facets {
+                    era: term(),
+                    ..Facets::default()
+                }),
+                "era_stats",
+            ),
+            (
+                one(Facets {
+                    meter: term(),
+                    ..Facets::default()
+                }),
+                "meter_stats",
+            ),
+            (
+                one(Facets {
+                    theme: term(),
+                    ..Facets::default()
+                }),
+                "theme_stats",
+            ),
+            (
+                one(Facets {
+                    rhyme: term(),
+                    ..Facets::default()
+                }),
+                "rhyme_stats",
+            ),
+            (
+                one(Facets {
+                    collection: term(),
+                    ..Facets::default()
+                }),
+                "collection_stats",
+            ),
+        ] {
+            assert_eq!(
+                count,
+                format!(
+                    "SELECT (SELECT poems_count::int FROM public.{stats_table} WHERE slug = ($1)[1]) AS total"
+                )
+            );
+        }
+    }
+
+    #[test]
+    fn anything_wider_than_one_term_counts_the_poems_themselves() {
+        for wider in [
+            Facets::default(),
+            Facets {
+                theme: vec!["alnasib".into(), "almadih".into()],
+                ..Facets::default()
+            },
+            Facets {
+                theme: vec!["alnasib".into()],
+                meter: vec!["altawil".into()],
+                ..Facets::default()
+            },
+        ] {
+            let (_, count) = list_sql(&clauses(&wider));
+            assert!(
+                count.starts_with("SELECT COUNT(*)::int AS total FROM public.poems p"),
+                "{count}"
+            );
+        }
     }
 
     #[test]
