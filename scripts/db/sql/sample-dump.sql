@@ -22,6 +22,14 @@ FROM (
 ) ranked
 WHERE ranked.position <= :poem_count - (SELECT count(*) FROM sampled_poem_ids);
 
+UPDATE poems SET recension_of_id = NULL
+WHERE recension_of_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sampled_poem_ids s WHERE s.id = poems.recension_of_id);
+
+DELETE FROM poem_aliases a WHERE NOT EXISTS (
+  SELECT 1 FROM sampled_poem_ids s WHERE s.id = a.poem_id
+);
+
 DELETE FROM poems p WHERE NOT EXISTS (
   SELECT 1 FROM sampled_poem_ids s WHERE s.id = p.id
 );

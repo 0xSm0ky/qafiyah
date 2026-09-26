@@ -5,7 +5,7 @@ SET search_path TO ''
 AS $function$
 BEGIN
   CREATE TEMP TABLE tmp_base ON COMMIT DROP AS
-  SELECT p.id, p.poet_id, p.era_id, p.theme_id, p.meter_id, p.rhyme_id
+  SELECT p.id, p.poet_id, p.era_id, p.theme_id, p.meter_id, p.rhyme_id, p.recension_of_id
   FROM public.poems p;
   CREATE INDEX ON tmp_base (id);
 
@@ -14,7 +14,7 @@ BEGIN
   FROM tmp_base b
   JOIN public.poets pt ON pt.id = b.poet_id
   JOIN public.eras  e  ON e.id  = b.era_id
-  WHERE NOT pt.is_anonymous AND e.slug <> 'ghayrmaruf';
+  WHERE NOT pt.is_anonymous AND e.slug <> 'ghayrmaruf' AND b.recension_of_id IS NULL;
   CREATE INDEX ON tmp_pool (id);
 
   CREATE TEMP TABLE tmp_ranked ON COMMIT DROP AS
@@ -57,6 +57,7 @@ BEGIN
   targets AS (
     SELECT
       b.id AS poem_id,
+      b.recension_of_id AS own_primary,
       x.cat,
       x.part,
       g.k,
@@ -77,7 +78,7 @@ BEGIN
     SELECT t.poem_id, r.id AS related_id, t.cat, min(t.k) AS k
     FROM targets t
     JOIN tmp_ranked r ON r.cat = t.cat AND r.part = t.part AND r.rn = t.rn_target
-    WHERE r.id <> t.poem_id
+    WHERE r.id <> t.poem_id AND r.id IS DISTINCT FROM t.own_primary
     GROUP BY t.poem_id, r.id, t.cat
   ),
 

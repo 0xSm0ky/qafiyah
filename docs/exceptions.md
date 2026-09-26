@@ -306,14 +306,6 @@ Departures not yet approved, found by a full scan on 2026-09-24 and ordered from
 - **Normal approach:** attributes on each param (or an `IntoParams` struct) and on the error response variants.
 - **Status:** Needs review
 
-### `/poems` SQL is assembled by hand with unexplained planner branches
-
-- **What:** a small query builder (`Table`, `FacetKind`, a `BTreeSet` of joins, and `format!` with `AssertSqlSafe`) emits different SQL for one facet value than for several, and a separately pruned join list for the count.
-- **Where:** `apps/api/src/domain/poems.rs`, `apps/api/src/domain/taxonomy.rs`
-- **Why it's unusual:** the special cases exist for the query planner, but no WHY is recorded (the comment rule allows exactly that one line), so a maintainer cannot tell whether they still matter.
-- **Normal approach:** `sqlx::QueryBuilder` with `push_bind`, or one static query using `($1::text[] IS NULL OR slug = ANY($1))`, with the planner reason recorded if a special case stays.
-- **Status:** Needs review
-
 ### The settings store is built for more than two values
 
 - **What:** a module-singleton store behind `useSyncExternalStore` also broadcasts a `window` CustomEvent that only the same module listens to, and it persists through a versioned, forward-compatible schema with legacy-key migration. All of this holds `theme` and `poemFontScale`.
@@ -662,6 +654,14 @@ The API is not just a thin DB connector, and the crate carries no doc comments: 
 - **Normal approach:** the `time` or `chrono` crate.
 - **Date:** 2026-09-12
 
+### `/poems` SQL is assembled by hand with planner special cases
+
+- **What:** `clauses` builds the list's `WHERE` with `format!` and `AssertSqlSafe`: a scalar `= (SELECT id ...)` lookup for one slug and `IN (SELECT id ... ANY)` for several, always behind `p.recension_of_id IS NULL`. The page is picked by id first and joined afterwards, and the total comes from the facet's `*_stats` row when the filter is one value of one facet, from `COUNT(*)` otherwise.
+- **Where:** `apps/api/src/domain/poems.rs`, `apps/api/src/domain/taxonomy.rs`, `scripts/db/sql/refresh-taxonomy-stats.sql`
+- **Why:** each special case is a measured planner win on the 346k-poem corpus (pgbench, prepared statements, 2026-09-26). A scalar lookup lets Postgres walk the `(facet, id)` partial index in id order and stop at the page, where `IN` joins and sorts every match: one theme's middle page 5.0 ms against 22.7 ms, its last page 9.8 against 24.8. Picking the page by id before joining poets and meters keeps the skipped rows inside that index, making deep pages 8 to 14 times faster. The `*_stats` total spares a count of up to about 200k rows on every single-term page, taking page 1 of a large facet from about 10 ms to 1 ms. The two count paths agree only while `refresh_taxonomy_stats()` has run since the last change to `poems`; `a_single_term_total_from_the_stats_table_equals_a_live_count_of_primaries` guards that.
+- **Normal approach:** `sqlx::QueryBuilder` with `push_bind` and a single `COUNT(*)` path.
+- **Date:** 2026-09-24
+
 ## Web (`apps/web`)
 
 Paths are relative to `apps/web/src/` unless they start at the repo root.
@@ -853,6 +853,16 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 - **Why:** a page linking many redundant candidates for an already-resolved shape (e.g. an index page listing dozens of items) must not exhaust the budget before a different, still-unresolved shape's legitimately needed candidate is reached.
 - **Normal approach:** cap the number of URLs visited.
 - **Date:** 2026-09-17
+
+## Corpus database (`scripts/db`)
+
+### Restores apply schema SQL instead of migrations
+
+- **What:** `scripts/db/init.sh` runs idempotent SQL files on every restore: `poem-aliases.sql`, `merge-poem.sql` and `poem-recensions.sql` create the `poem_aliases` table, the `poems.recension_of_id` column, their constraints and the primaries-only partial indexes if missing, drop the indexes those replace, and replace the maintenance functions, beside the existing `refresh-poem-relations.sql` and `refresh-taxonomy-stats.sql`.
+- **Where:** `scripts/db/init.sh`, `scripts/db/sql/`
+- **Why:** the corpus database is shipped as whole dumps and has no migrations (`apps/api/CLAUDE.md`), so a restore is the one moment a schema change can meet an existing dump. Applying the files there lets current code run against an older dump, and keeps the functions reviewable as files instead of living only inside dumps. A new dump already carries the same schema, so on it every statement is a no-op.
+- **Normal approach:** versioned migrations run on deploy, the way `apps/api/migrations/` manages the accounts database.
+- **Date:** 2026-09-26
 
 ## Static checks (`docs/development.md`)
 

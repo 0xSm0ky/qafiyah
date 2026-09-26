@@ -40,6 +40,18 @@ echo "[db-init] ensuring refresh_poem_relations() exists..."
 psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" \
   -f /docker-entrypoint-initdb.d/sql/refresh-poem-relations.sql
 
+echo "[db-init] ensuring poem_aliases exists..."
+psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" \
+  -f /docker-entrypoint-initdb.d/sql/poem-aliases.sql
+
+echo "[db-init] ensuring merge_poem() exists..."
+psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" \
+  -f /docker-entrypoint-initdb.d/sql/merge-poem.sql
+
+echo "[db-init] ensuring poems.recension_of_id exists..."
+psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" \
+  -f /docker-entrypoint-initdb.d/sql/poem-recensions.sql
+
 echo "[db-init] ensuring the taxonomy stats tables exist and match the restored data..."
 psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" \
   -f /docker-entrypoint-initdb.d/sql/refresh-taxonomy-stats.sql

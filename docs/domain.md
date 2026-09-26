@@ -160,6 +160,32 @@ its candidates from a pool that excludes them (`tmp_pool` in `scripts/db/sql/ref
 still _gets_ a list of its own, just a shorter one, since its poet and era buckets contribute
 nothing.
 
+## Merged poems and aliases
+
+When two rows hold the same poem by the same poet, one survives and the other is merged into it
+with `merge_poem(keep, absorb)` (`scripts/db/sql/merge-poem.sql`): the survivor keeps its own
+text, fills any unknown meter, theme or poem type and any empty collection, form, register, genre
+or majra from the absorbed copy, and the absorbed row is deleted. Its slug becomes a row in
+`poem_aliases`, so `GET /v1/poems/<old slug>` answers `301` to the survivor and the web redirects
+the page the same way. Aliases always point at a live poem: merging a survivor later repoints its
+aliases, and a new poem never receives a slug an alias holds. `merge_poem` refuses two different
+poets, which is an attribution question rather than a duplicate. A poem in a collection (the
+curated Mu'allaqat) always survives and is always the primary; otherwise the survivor is the
+longest text, then the most vocalized, then the one with the most known fields, then the lowest id.
+
+## Recension (رواية, riwaya)
+
+One poem is often transmitted in more than one reading: a word differs, a verse is missing or
+added, lines come in another order. The corpus keeps each reading as its own row and links them:
+the richest reading is the primary (`recension_of_id` NULL), every other reading has
+`recension_of_id` pointing at it, always a primary of the same poet. Lists, counts (live and
+`*_stats`), the sitemap, search, the random poem and related poems show primaries only, and the
+facet indexes are partial on `recension_of_id IS NULL` so the list keeps its index-only scans. A
+recension keeps its own page and URL, names its primary, and its canonical URL is the primary's;
+the primary's page lists its other recensions. The Mu'allaqat, which classical sources carry in
+several recensions, are the model case for adding readings later. Merging a poem that has
+recensions moves them to the survivor (`merge_poem`).
+
 ## Taxonomy counts
 
 The `*_stats` relations (`poet_stats`, `meter_stats`, `rhyme_stats`, `era_stats`, `theme_stats`,
